@@ -1,22 +1,15 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const connectDB = require('./config/db');
+const connectDB = require('./config/db'); // or your db connection path
 
 const app = express();
 
-// Initialize DB Engine Connection
-connectDB();
-
-// Global Middlewares
+// 1. GLOBAL MIDDLEWARE (MUST BE AT THE TOP)
 app.use(cors());
-app.use(express.json()); // Parses json body payloads automatically
+app.use(express.json()); // ◄--- CRITICAL: If this is below your routes, login requests fail!
 
-// Route Wireframes
-app.use('/api/auth', require('./routes/authRoutes.js'));
+// 2. ROUTE REGISTRATIONS
+const authRoutes = require('./routes/authRoutes');
+app.use('/api/auth', authRoutes); // ◄--- Make sure this matches exactly
 
-// Test Route context verification
-app.get('/', (req, res) => res.send('API Pipeline Processing...'));
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🛰️  Server broadcasting on port ${PORT}`));
+// ... rest of your server configuration ...

@@ -1,12 +1,67 @@
 const express = require('express');
 const router = express.Router();
-// Without const router = express.Router();, Node treats router.post as an undefined variable error, crashing the backend server the exact moment your frontend tries to knock on the door—resulting in that "Network connection failure" message. 
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 
-// 1. FORGOT PASSWORD ROUTE
+// ==========================================
+// 1. LOGIN ROUTE
+// ==========================================
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid email or password credentials." });
+    }
+
+    // Check if password matches the database hash
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid email or password credentials." });
+    }
+
+    // Create a login token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+    res.json({
+      token,
+      user: { id: user._id, username: user.username, email: user.email }
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error during login processing." });
+  }
+});
+
+// ==========================================
+// 2. REGISTER ROUTE
+// ==========================================
+router.post('/register', async (req, res) => {
+  const { email, username, password } = req.body;
+  try {
+    let userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ message: "An account with that email already exists." });
+    }
+
+    const newUser = new User({ email, username, password });
+    await newUser.save();
+
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+    res.status(201).json({
+      token,
+      user: { id: newUser._id, username: newUser.username, email: newUser.email }
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error during user registration." });
+  }
+});
+
+// ==========================================
+// 3. FORGOT PASSWORD ROUTE
+// ==========================================
 router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
   try {
@@ -15,20 +70,17 @@ router.post('/forgot-password', async (req, res) => {
       return res.status(404).json({ message: "No workspace profile matches that email address." });
     }
 
-    // Generate a temporary reset token valid for 15 minutes
     const resetToken = jwt.sign(
       { id: user._id }, 
       process.env.JWT_SECRET, 
       { expiresIn: '15m' }
     );
 
-    // In production, you would use a package like nodemailer to send this link via email.
-    // For now, we will send it back in the response so you can test it directly!
     const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
 
     res.json({ 
       message: "Password reset token generated successfully.", 
-      resetLink: resetLink // Copy/paste this to test in your browser later
+      resetLink: resetLink 
     });
 
   } catch (error) {
@@ -36,13 +88,14 @@ router.post('/forgot-password', async (req, res) => {
   }
 });
 
-// 2. RESET PASSWORD ROUTE
+// ==========================================
+// 4. RESET PASSWORD ROUTE
+// ==========================================
 router.post('/reset-password/:token', async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
 
   try {
-    // Verify token validity
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     const user = await User.findById(decoded.id);
@@ -50,7 +103,6 @@ router.post('/reset-password/:token', async (req, res) => {
       return res.status(404).json({ message: "User session expired or invalid profile." });
     }
 
-    // Explicitly update password (so your Pre-Save Bcrypt hashing hook triggers cleanly)
     user.password = password;
     await user.save();
 
