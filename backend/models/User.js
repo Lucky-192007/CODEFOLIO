@@ -19,6 +19,15 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  // ◄--- NEW PROFILE METRIC MAPPINGS ADDED HERE:
+  fullName: { type: String, default: "New Developer" },
+  title: { type: String, default: "Software Engineer" },
+  experience: { type: String, default: "0+ Years" },
+  location: { type: String, default: "" },
+  bio: { type: String, default: "" },
+  githubUrl: { type: String, default: "" },
+  linkedinUrl: { type: String, default: "" },
+  websiteUrl: { type: String, default: "" }
 }, { timestamps: true });
 
 // Pre-save middleware: Automate hashing passwords before database write layers
