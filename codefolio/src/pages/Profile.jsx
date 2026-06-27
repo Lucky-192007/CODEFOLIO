@@ -1,25 +1,28 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { usePortfolio } from "../context/PortfolioContext";
+import { useAuth } from "../context/AuthContext"; // ◄--- Import useAuth to grab user details
 import { Upload, X, Link as LinkIcon, User } from "lucide-react";
 import profilepic from "../assets/profilepic.jpeg";
 
 function Profile() {
-  const { profile, setProfile, theme ,  savePortfolioData,} = usePortfolio();
+  const { profile, setProfile, theme } = usePortfolio();
+  const { user, updateProfileState } = useAuth(); // ◄--- Destructure active logged-in user state details
+  const [isSaving, setIsSaving] = useState(false);
 
-  const { register, watch, setValue } = useForm({
+  const { register, watch, setValue, getValues } = useForm({
     defaultValues: {
-      fullName: profile.fullName || "",
-      title: profile.title || "",
-      experience: profile.experience || "",
-      email: profile.email || "",
-      location: profile.location || "",
-      github: profile.github || "",
-      linkedin: profile.linkedin || "",
-      website: profile.website || "",
+      fullName: profile.fullName || user?.fullName || "",
+      title: profile.title || user?.title || "",
+      experience: profile.experience || user?.experience || "",
+      email: profile.email || user?.email || "",
+      location: profile.location || user?.location || "",
+      github: profile.github || user?.githubUrl || "",
+      linkedin: profile.linkedin || user?.linkedinUrl || "",
+      website: profile.website || user?.websiteUrl || "",
       resume: profile.resume || "",
-      bio: profile.bio || "",
+      bio: profile.bio || user?.bio || "",
       photo: profile.photo || ""
     }
   });
@@ -51,13 +54,59 @@ function Profile() {
     setValue("photo", "");
   };
 
+  // ◄--- NEW REAL-TIME BACKEND DATABASE INTERACTION PIPELINE
+  const handleSaveProfile = async () => {
+    if (!user?.id) {
+      alert("Error: No authenticated user session found.");
+      return;
+    }
+
+    setIsSaving(true);
+    const formValues = getValues();
+
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/update-profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id, // Target the active MongoDB account record ID
+          fullName: formValues.fullName,
+          title: formValues.title,
+          experience: formValues.experience,
+          location: formValues.location,
+          bio: formValues.bio,
+          githubUrl: formValues.github,
+          linkedinUrl: formValues.linkedin,
+          websiteUrl: formValues.website,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to synchronize dataset layers.");
+      }
+
+      // Sync data to both local storage state caching vectors and app metrics
+      updateProfileState(data.user);
+      alert("✨ Success! Portfolio data metrics synced securely to cloud cluster.");
+
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const isDark = theme === "dark";
 
   return (
     <DashboardLayout>
       <div className={`p-8 rounded-2xl border transition-all duration-300 shadow-sm ${
         isDark
-          ? "bg-slate-900 border-slate-805 text-white"
+          ? "bg-slate-900 border-slate-800 text-white"
           : "bg-white border-slate-100 text-slate-900"
       }`}>
         <h2 className="text-2xl font-black mb-6 tracking-tight flex items-center gap-2">
@@ -70,7 +119,7 @@ function Profile() {
             type="text"
             placeholder="Full Name"
             {...register("fullName")}
-            className={`border p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-purple-550/20 transition ${
+            className={`border p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition ${
               isDark
                 ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-purple-500"
                 : "bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-purple-500"
@@ -81,7 +130,7 @@ function Profile() {
             type="text"
             placeholder="Job Title"
             {...register("title")}
-            className={`border p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-purple-550/20 transition ${
+            className={`border p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition ${
               isDark
                 ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-purple-500"
                 : "bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-purple-500"
@@ -92,7 +141,7 @@ function Profile() {
             type="text"
             placeholder="Years of Experience (e.g. 5+ Years)"
             {...register("experience")}
-            className={`border p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-purple-550/20 transition ${
+            className={`border p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition ${
               isDark
                 ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-purple-500"
                 : "bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-purple-500"
@@ -103,7 +152,7 @@ function Profile() {
             type="email"
             placeholder="Email Address"
             {...register("email")}
-            className={`border p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-purple-550/20 transition ${
+            className={`border p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition ${
               isDark
                 ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-purple-500"
                 : "bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-purple-500"
@@ -114,7 +163,7 @@ function Profile() {
             type="text"
             placeholder="Location"
             {...register("location")}
-            className={`border p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-purple-550/20 transition ${
+            className={`border p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition ${
               isDark
                 ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-purple-500"
                 : "bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-purple-500"
@@ -125,7 +174,7 @@ function Profile() {
             type="url"
             placeholder="GitHub URL"
             {...register("github")}
-            className={`border p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-purple-550/20 transition ${
+            className={`border p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition ${
               isDark
                 ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-purple-500"
                 : "bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-purple-500"
@@ -136,7 +185,7 @@ function Profile() {
             type="url"
             placeholder="LinkedIn URL"
             {...register("linkedin")}
-            className={`border p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-purple-550/20 transition ${
+            className={`border p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition ${
               isDark
                 ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-purple-500"
                 : "bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-purple-500"
@@ -147,7 +196,7 @@ function Profile() {
             type="url"
             placeholder="Website URL"
             {...register("website")}
-            className={`border p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-purple-550/20 transition ${
+            className={`border p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition ${
               isDark
                 ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-purple-500"
                 : "bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-purple-500"
@@ -158,7 +207,7 @@ function Profile() {
             type="url"
             placeholder="Resume URL (PDF Link)"
             {...register("resume")}
-            className={`border p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-purple-550/20 transition ${
+            className={`border p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition ${
               isDark
                 ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-purple-500"
                 : "bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-purple-500"
@@ -176,7 +225,7 @@ function Profile() {
                 <button
                   type="button"
                   onClick={() => setValue("photo", profilepic)}
-                  className="text-[11px] text-purple-550 hover:text-purple-400 hover:underline flex items-center gap-1 font-bold focus:outline-none"
+                  className="text-[11px] text-purple-500 hover:text-purple-400 hover:underline flex items-center gap-1 font-bold focus:outline-none"
                 >
                   ✨ Use Asset Photo (profilepic.jpeg)
                 </button>
@@ -194,7 +243,7 @@ function Profile() {
 
             {watchAllFields.photo ? (
               <div className={`flex items-center gap-4 p-3 rounded-xl border transition ${
-                isDark ? "bg-slate-900 border-slate-805" : "bg-white border-slate-200"
+                isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
               }`}>
                 <img
                   src={watchAllFields.photo}
@@ -252,18 +301,24 @@ function Profile() {
         <textarea
           placeholder="Write a charming bio for your developer portfolio..."
           {...register("bio")}
-          className={`w-full border p-3 rounded-xl mt-4 focus:outline-none focus:ring-2 focus:ring-purple-505/20 transition font-sans ${
+          className={`w-full border p-3 rounded-xl mt-4 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition font-sans ${
             isDark
-              ? "bg-slate-805 border-slate-700 text-white placeholder-slate-550 focus:border-purple-500"
+              ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-purple-500"
               : "bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-purple-500"
           }`}
           rows="5"
         />
-           <div className="mt-6 flex justify-end">
-              <button onClick={savePortfolioData} className="px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold transition">
-                 Save Portfolio
-              </button>
-            </div>
+
+        <div className="mt-6 flex justify-end">
+          <button 
+            type="button"
+            disabled={isSaving}
+            onClick={handleSaveProfile} // ◄--- Call our new custom cloud sync save handler
+            className="px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSaving ? "Syncing Metrics..." : "Save Portfolio"}
+          </button>
+        </div>
       </div>
     </DashboardLayout>
   );

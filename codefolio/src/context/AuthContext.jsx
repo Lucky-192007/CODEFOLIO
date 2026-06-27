@@ -64,13 +64,24 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // ◄--- NEW STATE SYNCHRONIZATION PIPELINE FOR PROFILE FIELDS
+  const updateProfileState = (updatedUserFields) => {
+    setUser((prev) => {
+      if (!prev) return null;
+      const updatedSession = { ...prev, ...updatedUserFields };
+      localStorage.setItem("dashboard_user", JSON.stringify(updatedSession));
+      return updatedSession;
+    });
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem("dashboard_user");
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    // Added updateProfileState to the context provider value object below:
+    <AuthContext.Provider value={{ user, login, register, logout, loading, updateProfileState }}>
       {!loading && children}
     </AuthContext.Provider>
   );
