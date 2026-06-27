@@ -6,26 +6,62 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Check for an existing session on page load
+  const API_URL = "http://localhost:5000/api/auth";
+
+  // Check for an existing session token on page boot
   useEffect(() => {
     const savedUser = localStorage.getItem("dashboard_user");
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
     setLoading(false);
-  } , []);
+  }, []);
 
-  const login = (email, username) => {
-    // In a real application, you'd make an API request here
-    const mockUser = { email, username: username || email.split("@")[0] };
-    setUser(mockUser);
-    localStorage.setItem("dashboard_user", JSON.stringify(mockUser));
+  // Real Database Login Authentication Context Pipeline
+  const login = async (email, password) => {
+    try {
+      const response = await fetch(`${API_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Authentication failed");
+      }
+
+      // Store both user data profile metrics and the verified signed JWT token securely
+      const userSession = { ...data.user, token: data.token };
+      setUser(userSession);
+      localStorage.setItem("dashboard_user", JSON.stringify(userSession));
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
-  const register = (email, username) => {
-    const mockUser = { email, username };
-    setUser(mockUser);
-    localStorage.setItem("dashboard_user", JSON.stringify(mockUser));
+  // Real Database Registration Context Pipeline
+  const register = async (email, username, password) => {
+    try {
+      const response = await fetch(`${API_URL}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, username, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Registration failed");
+      }
+
+      const userSession = { ...data.user, token: data.token };
+      setUser(userSession);
+      localStorage.setItem("dashboard_user", JSON.stringify(userSession));
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
   const logout = () => {
