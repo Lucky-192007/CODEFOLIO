@@ -10,16 +10,18 @@ function AuthPage() {
   const [password, setPassword] = useState("");
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!email || !password) return alert("Please fill out required fields.");
+  e.preventDefault();
+  if (!email || !password) return alert("Please fill out required fields.");
 
-    if (isRegister) {
-      if (!username) return alert("Please pick a username.");
-      register(email, username);
-    } else {
-      login(email, username);
-    }
-  };
+  if (isRegister) {
+    if (!username) return alert("Please pick a username.");
+    // Make sure 'password' is added right here as the 3rd argument!
+    register(email, username, password); 
+  } else {
+    // For logging in, pass email and password down to the backend route
+    login(email, password); 
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#242424] text-slate-200 px-4">
