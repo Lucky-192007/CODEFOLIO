@@ -1,8 +1,10 @@
+const express = require('express');
+const router = express.Router();
+// Without const router = express.Router();, Node treats router.post as an undefined variable error, crashing the backend server the exact moment your frontend tries to knock on the door—resulting in that "Network connection failure" message. 
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-// Make sure bcrypt is imported at the top of your authRoutes.js file
-const bcrypt = require('bcryptjs'); 
+const bcrypt = require('bcryptjs');
 
 // 1. FORGOT PASSWORD ROUTE
 router.post('/forgot-password', async (req, res) => {
@@ -58,3 +60,5 @@ router.post('/reset-password/:token', async (req, res) => {
     res.status(400).json({ message: "The reset link is invalid or has expired." });
   }
 });
+
+module.exports = router;
