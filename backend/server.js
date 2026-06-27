@@ -13,7 +13,7 @@ app.use(cors());
 app.use(express.json()); // Parses json body payloads automatically
 
 // Route Wireframes
-app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth', require('./routes/authRoutes.js'));
 
 // Test Route context verification
 app.get('/', (req, res) => res.send('API Pipeline Processing...'));
