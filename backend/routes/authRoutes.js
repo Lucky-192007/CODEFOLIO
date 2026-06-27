@@ -113,6 +113,30 @@ router.post('/reset-password/:token', async (req, res) => {
   }
 });
 
+// ==========================================
+// 5. UPDATE USER PROFILE FIELDS
+// ==========================================
+router.put('/update-profile', async (req, res) => {
+  const { userId, fullName, title, experience, location, bio, githubUrl, linkedinUrl, websiteUrl } = req.body;
 
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { fullName, title, experience, location, bio, githubUrl, linkedinUrl, websiteUrl },
+      { new: true, runValidators: true } // Return the fresh updated dataset
+    ).select("-password"); // Strip security strings out of payload link
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "Workspace user records not found." });
+    }
+
+    res.json({
+      message: "Data layers securely synced to cloud cluster!",
+      user: updatedUser
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error updating profile metrics." });
+  }
+});
 
 module.exports = router;
