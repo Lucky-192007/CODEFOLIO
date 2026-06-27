@@ -9,6 +9,7 @@ import Projects from "../pages/Projects";
 import Skills from "../pages/Skills";
 import Theme from "../pages/Theme";
 import Preview from "../pages/Preview";
+import ResetPasswordPage from "../pages/ResetPasswordPage";
 
 // A clean component wrapper to isolate protected dashboard pages safely
 const ProtectedRoute = ({ children }) => {
