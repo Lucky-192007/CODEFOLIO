@@ -38,6 +38,7 @@ function AppRoutes() {
       <Route path="/theme" element={<ProtectedRoute><Theme /></ProtectedRoute>} />
       <Route path="/preview" element={<ProtectedRoute><Preview /></ProtectedRoute>} />
       <Route path="/portfolio" element={<ProtectedRoute><PortfolioPage /></ProtectedRoute>} />
+      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
       {/* Catch-all fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
