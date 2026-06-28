@@ -7,7 +7,6 @@ import {
 } from "react";
 import heroPhoto from "../assets/hero.png";
 
-
 const PortfolioContext = createContext();
 
 const initialProfile = {
@@ -138,50 +137,89 @@ export function PortfolioProvider({ children }) {
 
   const loadPortfolio = async () => {
   try {
-    const data = await getPortfolio();
+    const user = JSON.parse(localStorage.getItem("dashboard_user"));
 
-    setProfile(data.profile);
-    setProjects(data.projects);
-    setSkills(data.skills);
-    setTemplateId(data.templateId);
-  } catch (error) {
-    console.log("No portfolio found");
+    if (!user) return;
+
+    const response = await fetch(
+      `http://localhost:5000/api/auth/profile/${user.id}`
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message);
+    }
+
+    setProfile({
+      fullName: data.user.fullName,
+      title: data.user.title,
+      experience: data.user.experience,
+      location: data.user.location,
+      bio: data.user.bio,
+      github: data.user.githubUrl,
+      linkedin: data.user.linkedinUrl,
+      website: data.user.websiteUrl,
+      photo: data.user.photo || "",
+    });
+
+    setProjects(data.user.projects || []);
+    setSkills(data.user.skills || []);
+  } catch (err) {
+    console.log(err.message);
   }
 };
 
 const savePortfolioData = async () => {
   try {
-    const data = await savePortfolio({
-      profile,
-      projects,
-      skills,
-      templateId,
-    });
+    const user = JSON.parse(localStorage.getItem("dashboard_user"));
 
-    console.log("Saved Portfolio:", data);
-    alert("Portfolio saved successfully!");
-  } catch (error) {
-    console.log("Full Error:", error);
-
-    if (error.response) {
-      console.log("Status:", error.response.status);
-      console.log("Response:", error.response.data);
-    } else {
-      console.log("Message:", error.message);
+    if (!user) {
+      alert("Please login first.");
+      return;
     }
 
-    alert("Failed to save portfolio");
+    const response = await fetch(
+      "http://localhost:5000/api/auth/update-profile",
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          fullName: profile.fullName,
+          title: profile.title,
+          experience: profile.experience,
+          location: profile.location,
+          bio: profile.bio,
+          githubUrl: profile.github,
+          linkedinUrl: profile.linkedin,
+          websiteUrl: profile.website,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message);
+    }
+
+    console.log("Profile saved successfully");
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
   }
 };
 
 useEffect(() => {
-  const userInfo = localStorage.getItem("userInfo");
+  const user = localStorage.getItem("dashboard_user");
 
-  if (userInfo) {
+  if (user) {
     loadPortfolio();
   }
 }, []);
-
   return (
     <PortfolioContext.Provider
       value={{
