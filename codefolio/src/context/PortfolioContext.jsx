@@ -7,10 +7,6 @@ import {
 } from "react";
 import heroPhoto from "../assets/hero.png";
 
-import {
-  savePortfolio,
-  getPortfolio,
-} from "../services/portfolioService";
 
 const PortfolioContext = createContext();
 
