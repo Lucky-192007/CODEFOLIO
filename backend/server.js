@@ -19,7 +19,7 @@ app.use(
         connectSrc: ["'self'", "http://localhost:5173", "http://localhost:5000"], // ◄--- Permits direct local communication pipelines
         scriptSrc: ["'self'", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:", "blob:"], // ◄--- Allows profile photos, screenshots, and base64 images to load safely
+       imgSrc: ["'self'", "data:", "blob:", "https://images.unsplash.com"],// ◄--- Allows profile photos, screenshots, and base64 images to load safely
       },
     },
   })
@@ -27,6 +27,19 @@ app.use(
 
 app.use(cors());
 app.use(express.json()); 
+
+// ◄--- ADD THIS TEMPORARY LOGGER HERE
+app.use((req, res, next) => {
+  if (req.path.includes('skill') || req.path.includes('project')) {
+    console.log(`\n=== 📥 INCOMING REQUEST: ${req.method} ${req.path} ===`);
+    console.log("BODY RECV:", JSON.stringify(req.body, null, 2));
+  }
+  next();
+});
+
+app.get('/', (req, res) => {
+  res.status(200).send("🛰️ Backend Security Engine Online and Broadcasting!");
+});
 
 // 3. Application Route Mount Points
 const authRoutes = require('./routes/authRoutes');

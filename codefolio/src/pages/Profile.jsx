@@ -9,6 +9,7 @@ import profilepic from "../assets/profilepic.jpeg";
 function Profile() {
   const { profile, setProfile, theme } = usePortfolio();
   const { user, updateProfileState } = useAuth(); // ◄--- Destructure active logged-in user state details
+  const [dragActive, setDragActive] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const { register, watch, setValue, getValues } = useForm({
@@ -39,17 +40,45 @@ function Profile() {
     return () => subscription.unsubscribe();
   }, [watch, setProfile]);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setValue("photo", reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
+  const processFile = (file) => {
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    alert("Please upload an image file.");
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onloadend = () => {
+    setValue("photo", reader.result);
   };
 
+  reader.readAsDataURL(file);
+};
+
+const handleFileChange = (e) => {
+  processFile(e.target.files[0]);
+};
+
+const handleDragOver = (e) => {
+  e.preventDefault();
+  setDragActive(true);
+};
+
+const handleDragLeave = (e) => {
+  e.preventDefault();
+  setDragActive(false);
+};
+
+const handleDrop = (e) => {
+  e.preventDefault();
+  setDragActive(false);
+
+  const file = e.dataTransfer.files[0];
+
+  processFile(file);
+};
   const removeProfilePhoto = () => {
     setValue("photo", "");
   };
@@ -258,11 +287,20 @@ function Profile() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className={`border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition group ${
-                  isDark
-                    ? "border-slate-800 bg-slate-900/40 hover:border-purple-500 hover:bg-slate-800/20"
-                    : "border-slate-200 bg-white hover:border-purple-500 hover:bg-slate-50"
-                }`}>
+              <label
+  onDragOver={handleDragOver}
+  onDragLeave={handleDragLeave}
+  onDrop={handleDrop}
+  className={`border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition group ${
+    dragActive
+      ? isDark
+        ? "border-purple-500 bg-purple-900/20"
+        : "border-purple-500 bg-purple-50"
+      : isDark
+      ? "border-slate-800 bg-slate-900/40 hover:border-purple-500 hover:bg-slate-800/20"
+      : "border-slate-200 bg-white hover:border-purple-500 hover:bg-slate-50"
+  }`}
+>
                   <input
                     type="file"
                     accept="image/*"
@@ -282,7 +320,7 @@ function Profile() {
                     </div>
                     <input
                       type="url"
-                      placeholder="https://images.unsplash.com/etc..."
+                      placeholder="https://images.com.c.."
                       value={watchAllFields.photo || ""}
                       onChange={(e) => setValue("photo", e.target.value)}
                       className={`w-full border pl-9 p-2.5 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all font-mono ${

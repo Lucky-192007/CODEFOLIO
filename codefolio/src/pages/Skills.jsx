@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { usePortfolio } from "../context/PortfolioContext";
-import { useAuth } from "../context/AuthContext"; // ◄--- Import useAuth for logged-in user context
+import { useAuth } from "../context/AuthContext";
 
 function Skills() {
   const { skills, setSkills, theme } = usePortfolio();
-  const { user } = useAuth(); // ◄--- Extract active authenticated profile
+  const { user } = useAuth();
   const [isSyncing, setIsSyncing] = useState(false);
 
   const [skillData, setSkillData] = useState({
@@ -64,12 +64,9 @@ function Skills() {
         throw new Error(data.message || "Failed to commit tech item to database.");
       }
 
-      // Sync local state instantly with array layout returned by backend schema
-      setSkills(data.skills);
-      
-      // Reset text input layout gracefully
+      setSkills(data.skills || []);
       setSkillData({
-        category: skillData.category, // Keep active chosen select choice
+        category: skillData.category,
         name: "",
       });
 
@@ -84,7 +81,6 @@ function Skills() {
   const removeSkill = async (indexToRemove, skillId) => {
     if (!user?.id) return;
 
-    // Favor unique DB object schema IDs, fallback safely to index tracking reference
     const targetIdentifier = skillId || indexToRemove;
 
     try {
@@ -105,7 +101,7 @@ function Skills() {
         throw new Error(data.message || "Failed to scrub item from user record layout.");
       }
 
-      setSkills(data.skills);
+      setSkills(data.skills || []);
 
     } catch (err) {
       alert(err.message);
@@ -125,9 +121,7 @@ function Skills() {
   return (
     <DashboardLayout>
       <div className={`p-8 rounded-2xl border transition-all duration-300 shadow-sm ${
-        isDark
-          ? "bg-slate-900 border-slate-800 text-white"
-          : "bg-white border-slate-100 text-slate-900"
+        isDark ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-100 text-slate-900"
       }`}>
 
         <h2 className="text-2xl font-black mb-6 tracking-tight">
@@ -137,16 +131,9 @@ function Skills() {
         <div className="grid md:grid-cols-3 gap-4 mb-8">
           <select
             value={skillData.category}
-            onChange={(e) =>
-              setSkillData({
-                ...skillData,
-                category: e.target.value,
-              })
-            }
+            onChange={(e) => setSkillData({ ...skillData, category: e.target.value })}
             className={`border p-3 rounded-xl transition font-medium focus:ring-2 focus:ring-purple-500 focus:outline-none ${
-              isDark
-                ? "bg-slate-800 border-slate-700 text-white"
-                : "bg-white border-slate-200 text-slate-900"
+              isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-slate-200 text-slate-900"
             }`}
           >
             {categories.map((cat) => (
@@ -159,12 +146,7 @@ function Skills() {
             placeholder="e.g. React"
             disabled={isSyncing}
             value={skillData.name}
-            onChange={(e) =>
-              setSkillData({
-                ...skillData,
-                name: e.target.value,
-              })
-            }
+            onChange={(e) => setSkillData({ ...skillData, name: e.target.value })}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -172,9 +154,7 @@ function Skills() {
               }
             }}
             className={`border p-3 rounded-xl transition focus:ring-2 focus:ring-purple-500 focus:outline-none ${
-              isDark
-                ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500"
-                : "bg-white border-slate-200 text-slate-900 placeholder-slate-400"
+              isDark ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500" : "bg-white border-slate-200 text-slate-900 placeholder-slate-400"
             }`}
           />
 
@@ -189,43 +169,32 @@ function Skills() {
 
         <div className="space-y-6">
           {categories.map((category) => (
-            <div
-              key={category}
-              className={`pb-6 border-b last:border-0 last:pb-0 ${
-                isDark ? "border-slate-800/65" : "border-slate-100"
-              }`}
-            >
-              <h3 className={`text-base font-bold mb-3 ${
-                isDark ? "text-slate-300" : "text-slate-800"
-              }`}>
+            <div key={category} className={`pb-6 border-b last:border-0 last:pb-0 ${isDark ? "border-slate-800/65" : "border-slate-100"}`}>
+              <h3 className={`text-base font-bold mb-3 ${isDark ? "text-slate-300" : "text-slate-800"}`}>
                 {category}
               </h3>
 
               <div className="flex flex-wrap gap-3">
-                {skills
-                  .filter((skill) => skill.category === category)
+                {(skills || [])
+                  .filter((skill) => skill && skill.category === category)
                   .map((skill, index) => (
                     <div
-                      key={skill._id || index} // ◄--- Favor unique key identifier from DB entry schema
+                      key={skill._id || index}
                       className={`px-4 py-2 rounded-xl flex items-center gap-2 border font-medium text-sm transition ${
-                        isDark
-                          ? "bg-slate-800 border-slate-700 text-slate-200"
-                          : "bg-slate-50 border-slate-100 text-slate-800"
+                        isDark ? "bg-slate-800 border-slate-700 text-slate-200" : "bg-slate-50 border-slate-100 text-slate-800"
                       }`}
                     >
                       <span>{skill.name}</span>
-
                       <button
-                        onClick={() => removeSkill(skills.indexOf(skill), skill._id)} // ◄--- Pass current index mapping and DB entry ID
+                        onClick={() => removeSkill((skills || []).indexOf(skill), skill._id)}
                         className="text-red-500 hover:text-red-400 font-extrabold focus:outline-none pl-1 transition-colors"
-                        aria-label={`Remove ${skill.name}`}
                       >
                         ×
                       </button>
                     </div>
                   ))}
 
-                {skills.filter((s) => s.category === category).length === 0 && (
+                {(skills || []).filter((s) => s && s.category === category).length === 0 && (
                   <p className="text-xs text-slate-400 italic">No skills added in this category.</p>
                 )}
               </div>
