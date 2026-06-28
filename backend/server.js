@@ -1,6 +1,7 @@
 require('dotenv').config(); // ◄--- CRITICAL: Must be line 1 to load your variables!
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet'); // ◄--- Import Helmet security middleware
 const connectDB = require('./config/db'); 
 
 const app = express();
@@ -8,7 +9,22 @@ const app = express();
 // 1. Establish Database Connection Bridge
 connectDB();
 
-// 2. Global Request Handling Middleware
+// 2. Global Security & Request Handling Middleware
+// Use helmet with custom CSP configurations tailored for local development environments
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        connectSrc: ["'self'", "http://localhost:5173", "http://localhost:5000"], // ◄--- Permits direct local communication pipelines
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "blob:"], // ◄--- Allows profile photos, screenshots, and base64 images to load safely
+      },
+    },
+  })
+);
+
 app.use(cors());
 app.use(express.json()); 
 
