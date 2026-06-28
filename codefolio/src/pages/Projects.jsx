@@ -110,7 +110,7 @@ function Projects() {
 
     const payload = {
       userId: user.id,
-      projectId: editingId, // Matched back-end identification key uniform naming convention
+      projectIdentifier: editingId,
       project: {
         title: project.title.trim(),
         description: project.description.trim(),
@@ -166,8 +166,8 @@ function Projects() {
           "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
-          userId: user.id,
-          projectId: targetIdentifier,
+        userId: user.id,
+        projectIdentifier: targetIdentifier,
         }),
       });
 

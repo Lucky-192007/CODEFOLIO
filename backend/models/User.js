@@ -37,10 +37,11 @@ const UserSchema = new mongoose.Schema({
   experience: { type: String, default: "" },
   location: { type: String, default: "" },
   bio: { type: String, default: "" },
-  githubUrl: { type: String, default: "" },
-  linkedinUrl: { type: String, default: "" },
-  websiteUrl: { type: String, default: "" },
-
+  github: { type: String, default: "" },
+  linkedin: { type: String, default: "" },
+  website: { type: String, default: "" },
+  
+  photo: { type: String, default: "" },
   skills: [SkillSchema],
   projects: [ProjectSchema]
 }, {
