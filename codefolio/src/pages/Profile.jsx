@@ -8,7 +8,7 @@ import profilepic from "../assets/profilepic.jpeg";
 
 function Profile() {
   const { profile, setProfile, theme } = usePortfolio();
-  const { user, updateProfileState } = useAuth(); // ◄--- Destructure active logged-in user state details
+  const { user, token, updateProfileState } = useAuth();
   const [dragActive, setDragActive] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -96,19 +96,24 @@ const handleDrop = (e) => {
     try {
       const response = await fetch("http://localhost:5000/api/auth/update-profile", {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+       headers: {
+           "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+              },
         body: JSON.stringify({
-          userId: user.id, // Target the active MongoDB account record ID
-          fullName: formValues.fullName,
-          title: formValues.title,
-          experience: formValues.experience,
-          location: formValues.location,
-          bio: formValues.bio,
-          githubUrl: formValues.github,
-          linkedinUrl: formValues.linkedin,
-          websiteUrl: formValues.website,
+        userId: user.id,
+        fullName: formValues.fullName,
+        email: formValues.email,
+        title: formValues.title,
+        experience: formValues.experience,
+        location: formValues.location,
+        bio: formValues.bio,
+        github: formValues.github,
+        linkedin: formValues.linkedin,
+        website: formValues.website,
+        resume: formValues.resume,
+        photo: formValues.photo,
+
         }),
       });
 

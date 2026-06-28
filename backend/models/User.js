@@ -42,6 +42,7 @@ const UserSchema = new mongoose.Schema({
   website: { type: String, default: "" },
   
   photo: { type: String, default: "" },
+  resume: {type: String,default: ""},
   skills: [SkillSchema],
   projects: [ProjectSchema]
 }, {

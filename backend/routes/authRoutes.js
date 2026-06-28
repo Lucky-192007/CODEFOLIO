@@ -121,11 +121,11 @@ router.post('/reset-password/:token', async (req, res) => {
 // 4. METRICS & BASE PROFILE FIELDS MANAGEMENT
 // =========================================================================
 router.put('/update-profile', async (req, res) => {
-  const {userId,fullName,title,experience,location,bio,github,linkedin,website,email,photo} = req.body;
+  const {userId,fullName,title,experience,location,bio,github,linkedin,website,email,photo,resume} = req.body;
   try {
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { fullName,title,experience,location,bio,github,linkedin,website,email,photo},
+      { fullName,title,experience,location,bio,github,linkedin,website,email,photo,resume},
       { new: true, runValidators: true }
     ).select("-password");
     if (!updatedUser) return res.status(404).json({ message: "Workspace user records not found." });

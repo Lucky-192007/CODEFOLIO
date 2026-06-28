@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { usePortfolio } from "../context/PortfolioContext";
 import { useAuth } from "../context/AuthContext";
@@ -6,7 +6,7 @@ import { Plus, Trash, GitBranch, ExternalLink, Award, Upload, X, Link, Edit2 } f
 
 function Projects() {
   const { projects, setProjects, theme } = usePortfolio();
-  const { user, token } = useAuth(); // Added token for secure headers
+  const { user, token } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingId, setEditingId] = useState(null); 
 
@@ -19,27 +19,6 @@ function Projects() {
     screenshot: "",
   });
 
-  // FETCH PERSISTED PROJECTS ON MOUNT
-  useEffect(() => {
-    const fetchUserProjects = async () => {
-      if (!user?.id) return;
-      try {
-        const response = await fetch(`http://localhost:5000/api/auth/profile/${user.id}`, {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
-        });
-        const data = await response.json();
-        if (response.ok && data.user?.projects) {
-          setProjects(data.user.projects);
-        }
-      } catch (err) {
-        console.error("Error retrieving portfolio projects:", err);
-      }
-    };
-
-    fetchUserProjects();
-  }, [user?.id, token, setProjects]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -126,7 +105,7 @@ function Projects() {
         method: method,
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(payload),
       });
@@ -163,7 +142,7 @@ function Projects() {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}` 
         },
         body: JSON.stringify({
         userId: user.id,

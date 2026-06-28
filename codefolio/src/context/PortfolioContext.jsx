@@ -193,9 +193,9 @@ const savePortfolioData = async () => {
           experience: profile.experience,
           location: profile.location,
           bio: profile.bio,
-          githubUrl: profile.github,
-          linkedinUrl: profile.linkedin,
-          websiteUrl: profile.website,
+          github: profile.github,
+          linkedin: profile.linkedin,
+          website: profile.website,
         }),
       }
     );
