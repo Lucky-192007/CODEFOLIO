@@ -72,11 +72,10 @@ export function PortfolioProvider({ children }) {
     return saved ? JSON.parse(saved) : initialSkills;
   });
 
-  // Dynamic real-time/persistent simulated visitor count
   const [views, setViews] = useState(() => {
     const saved = localStorage.getItem("portfolio_views");
     if (saved) return parseInt(saved, 10);
-    const initialViews = 1424; // belief-anchored beginning views count
+    const initialViews = 1424; 
     localStorage.setItem("portfolio_views", initialViews.toString());
     return initialViews;
   });
@@ -136,90 +135,105 @@ export function PortfolioProvider({ children }) {
   }, [skills]);
 
   const loadPortfolio = async () => {
-  try {
-    const user = JSON.parse(localStorage.getItem("dashboard_user"));
+    try {
+      const user = JSON.parse(localStorage.getItem("dashboard_user"));
+      if (!user) return;
 
-    if (!user) return;
+      const targetId = user.id || user._id; // ◄--- Safe assignment lookup parameter fallback targeting database configurations
+      const token = localStorage.getItem("token");
 
-    const response = await fetch(
-      `http://localhost:5000/api/auth/profile/${user.id}`
-    );
+      const response = await fetch(
+        `http://localhost:5000/api/auth/profile/${targetId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.message);
-    }
-
-    setProfile({
-      fullName: data.user.fullName,
-      title: data.user.title,
-      experience: data.user.experience,
-      location: data.user.location,
-      bio: data.user.bio,
-      github: data.user.githubUrl,
-      linkedin: data.user.linkedinUrl,
-      website: data.user.websiteUrl,
-      photo: data.user.photo || "",
-    });
-
-    setProjects(data.user.projects || []);
-    setSkills(data.user.skills || []);
-  } catch (err) {
-    console.log(err.message);
-  }
-};
-
-const savePortfolioData = async () => {
-  try {
-    const user = JSON.parse(localStorage.getItem("dashboard_user"));
-
-    if (!user) {
-      alert("Please login first.");
-      return;
-    }
-
-    const response = await fetch(
-      "http://localhost:5000/api/auth/update-profile",
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          fullName: profile.fullName,
-          title: profile.title,
-          experience: profile.experience,
-          location: profile.location,
-          bio: profile.bio,
-          github: profile.github,
-          linkedin: profile.linkedin,
-          website: profile.website,
-        }),
+      if (!response.ok) {
+        throw new Error(data.message);
       }
-    );
 
-    const data = await response.json();
+      // If database contains profile properties, assign them; else fall back to default template definitions
+      if (data.user) {
+        setProfile({
+          fullName: data.user.fullName || initialProfile.fullName,
+          title: data.user.title || initialProfile.title,
+          experience: data.user.experience || initialProfile.experience,
+          location: data.user.location || initialProfile.location,
+          bio: data.user.bio || initialProfile.bio,
+          github: data.user.githubUrl || data.user.github || initialProfile.github,
+          linkedin: data.user.linkedinUrl || data.user.linkedin || initialProfile.linkedin,
+          website: data.user.websiteUrl || data.user.website || initialProfile.website,
+          photo: data.user.photo || initialProfile.photo,
+        });
 
-    if (!response.ok) {
-      throw new Error(data.message);
+        // Ensure completely empty project states display initial parameters securely
+        setProjects(data.user.projects && data.user.projects.length > 0 ? data.user.projects : initialProjects);
+        setSkills(data.user.skills && data.user.skills.length > 0 ? data.user.skills : initialSkills);
+      }
+    } catch (err) {
+      console.log("Error running pipeline fallback structure:", err.message);
     }
+  };
 
-    console.log("Profile saved successfully");
-  } catch (err) {
-    console.error(err);
-    alert(err.message);
-  }
-};
+  const savePortfolioData = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("dashboard_user"));
 
-useEffect(() => {
-  const user = localStorage.getItem("dashboard_user");
+      if (!user) {
+        alert("Please login first.");
+        return;
+      }
 
-  if (user) {
-    loadPortfolio();
-  }
-}, []);
+      const targetId = user.id || user._id; // ◄--- Ensure updates use active token ID signatures
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+        "http://localhost:5000/api/auth/update-profile",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userId: targetId,
+            fullName: profile.fullName,
+            title: profile.title,
+            experience: profile.experience,
+            location: profile.location,
+            bio: profile.bio,
+            github: profile.github,
+            linkedin: profile.linkedin,
+            website: profile.website,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message);
+      }
+
+      console.log("Profile saved successfully");
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    }
+  };
+
+  useEffect(() => {
+    const user = localStorage.getItem("dashboard_user");
+    if (user) {
+      loadPortfolio();
+    }
+  }, []);
+
   return (
     <PortfolioContext.Provider
       value={{

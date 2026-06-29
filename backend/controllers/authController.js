@@ -1,6 +1,7 @@
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const User = require('../models/User');
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const User = require("../models/User");
+const generateToken = require("../utils/generateToken");
 
 const DEFAULT_SKILLS = [
   { category: "Programming Languages", name: "JavaScript" },
@@ -30,8 +31,19 @@ const login = async (req, res) => {
     if (!user) return res.status(400).json({ message: "Invalid email or password credentials." });
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid email or password credentials." });
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.json({ token, user: { id: user._id, username: user.username, email: user.email } });
+    const token = generateToken(user._id);
+    // const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+  res.json({
+  token,
+  user: {
+    id: user._id,
+    username: user.username,
+    email: user.email,
+    fullName: user.fullName,
+    title: user.title,
+    photo: user.photo
+  }
+});
   } catch (error) {
     res.status(500).json({ message: "Server error during login processing." });
   }
@@ -44,7 +56,8 @@ const register = async (req, res) => {
     if (userExists) return res.status(400).json({ message: "An account with that email already exists." });
     const newUser = new User({ email, username, password, skills: DEFAULT_SKILLS, projects: DEFAULT_PROJECTS });
     await newUser.save();
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = generateToken(newUser._id);
+    // const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
     res.status(201).json({ token, user: { id: newUser._id, username: newUser.username, email: newUser.email } });
   } catch (error) {
     res.status(500).json({ message: "Server error during user registration." });

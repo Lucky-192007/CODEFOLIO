@@ -18,7 +18,10 @@ function Skills() {
     const fetchUserSkills = async () => {
       if (!user?.id) return;
       try {
-        const response = await fetch(`http://localhost:5000/api/auth/profile/${user.id}`);
+        const token = localStorage.getItem("token");
+        const response = await fetch(`http://localhost:5000/api/auth/profile/${user.id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const data = await response.json();
         if (response.ok && data.user?.skills) {
           setSkills(data.user.skills);
@@ -50,10 +53,12 @@ function Skills() {
     };
 
     try {
+      const token = localStorage.getItem("token");
       const response = await fetch("http://localhost:5000/api/auth/add-skill", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });
@@ -84,10 +89,12 @@ function Skills() {
     const targetIdentifier = skillId || indexToRemove;
 
     try {
+      const token = localStorage.getItem("token");
       const response = await fetch("http://localhost:5000/api/auth/delete-skill", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           userId: user.id,

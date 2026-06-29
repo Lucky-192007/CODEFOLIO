@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { usePortfolio } from "../context/PortfolioContext";
-import { useAuth } from "../context/AuthContext"; // ◄--- Import useAuth to grab user details
+import { useAuth } from "../context/AuthContext"; 
 import { Upload, X, Link as LinkIcon, User } from "lucide-react";
 import profilepic from "../assets/profilepic.jpeg";
 import axios from "axios";
@@ -43,97 +43,104 @@ function Profile() {
     });
     return () => subscription.unsubscribe();
   }, [watch, setProfile]);
-const processFile = async (file) => {
-  if (!file) return;
 
-  if (!file.type.startsWith("image/")) {
-    alert("Please upload an image.");
-    return;
-  }
+  const processFile = async (file) => {
+    if (!file) return;
 
-  if (file.size > 5 * 1024 * 1024) {
-    alert("Image must be smaller than 5MB.");
-    return;
-  }
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload an image.");
+      return;
+    }
 
-  setUploadProgress(0);
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image must be smaller than 5MB.");
+      return;
+    }
 
-  const reader = new FileReader();
-  reader.readAsDataURL(file);
+    setUploadProgress(0);
 
-  reader.onloadend = async () => {
-    try {
-      const res = await axios.post(
-        `${API}/upload/image`,
-        {
-          image: reader.result,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    reader.onloadend = async () => {
+      try {
+        const res = await axios.post(
+          `${API}/upload/image`,
+          {
+            image: reader.result,
           },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
 
-          onUploadProgress: (progressEvent) => {
-            const percent = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
+            onUploadProgress: (progressEvent) => {
+              const percent = Math.round(
+                (progressEvent.loaded * 100) / progressEvent.total
+              );
 
-            setUploadProgress(percent);
-          },
-        }
-      );
+              setUploadProgress(percent);
+            },
+          }
+        );
 
-      setValue("photo", res.data.imageUrl);
-      setUploadProgress(100);
+        setValue("photo", res.data.imageUrl);
+        setUploadProgress(100);
 
-setTimeout(() => {
-  setUploadProgress(0);
-}, 1000);
+        setTimeout(() => {
+          setUploadProgress(0);
+        }, 1000);
 
-      setTimeout(() => {
+        setTimeout(() => {
+          setUploadProgress(0);
+        }, 800);
+      } catch (err) {
+        console.error(err);
+        alert("Image upload failed.");
         setUploadProgress(0);
-      }, 800);
-    } catch (err) {
-      console.error(err);
-      alert("Image upload failed.");
-      setUploadProgress(0);
+      }
+    };
+  };
+
+  const removeProfilePhoto = () => {
+    setValue("photo", "");
+    setUploadProgress(0);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      processFile(file);
     }
   };
-};
-const removeProfilePhoto = () => {
-  setValue("photo", "");
-  setUploadProgress(0);
-};
-const handleFileChange = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    processFile(file);
-  }
-};
 
-const handleDragOver = (e) => {
-  e.preventDefault();
-  setDragActive(true);
-};
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setDragActive(true);
+  };
 
-const handleDragLeave = (e) => {
-  e.preventDefault();
-  setDragActive(false);
-};
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setDragActive(false);
+  };
 
-const handleDrop = (e) => {
-  e.preventDefault();
-  setDragActive(false);
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragActive(false);
 
-  const file = e.dataTransfer.files[0];
+    const file = e.dataTransfer.files[0];
 
-  if (file) {
-    processFile(file);
-  }
-};
-  // ◄--- NEW REAL-TIME BACKEND DATABASE INTERACTION PIPELINE
+    if (file) {
+      processFile(file);
+    }
+  };
+
   const handleSaveProfile = async () => {
-    if (!user?.id) {
+    // Modified validation check to ensure user ID object footprint matches
+    const activeUserId = user?.id || user?._id;
+
+    if (!activeUserId) {
       alert("Error: No authenticated user session found.");
       return;
     }
@@ -144,24 +151,23 @@ const handleDrop = (e) => {
     try {
       const response = await fetch(`${API}/auth/update-profile`, {
         method: "PUT",
-       headers: {
-           "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-              },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
-        userId: user.id,
-        fullName: formValues.fullName,
-        email: formValues.email,
-        title: formValues.title,
-        experience: formValues.experience,
-        location: formValues.location,
-        bio: formValues.bio,
-        github: formValues.github,
-        linkedin: formValues.linkedin,
-        website: formValues.website,
-        resume: formValues.resume,
-        photo: formValues.photo,
-
+          userId: activeUserId, // ◄--- Dynamic mapping to fix Bug 1
+          fullName: formValues.fullName,
+          email: formValues.email,
+          title: formValues.title,
+          experience: formValues.experience,
+          location: formValues.location,
+          bio: formValues.bio,
+          github: formValues.github,
+          linkedin: formValues.linkedin,
+          website: formValues.website,
+          resume: formValues.resume,
+          photo: formValues.photo,
         }),
       });
 
@@ -171,7 +177,6 @@ const handleDrop = (e) => {
         throw new Error(data.message || "Failed to synchronize dataset layers.");
       }
 
-      // Sync data to both local storage state caching vectors and app metrics
       updateProfileState(data.user);
       alert("✨ Success! Portfolio data metrics synced securely to cloud cluster.");
 
@@ -340,18 +345,18 @@ const handleDrop = (e) => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label
-  onDrop={handleDrop}
-  onDragOver={handleDragOver}
-  onDragLeave={handleDragLeave}
-  className={`border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition group ${
-    dragActive
-      ? "border-purple-500 bg-purple-100"
-      : isDark
-      ? "border-slate-800 bg-slate-900/30 hover:border-purple-500 hover:bg-slate-800/10"
-      : "border-slate-200 bg-slate-50/50 hover:border-purple-500 hover:bg-slate-50"
-  }`}
->
+                <label
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  className={`border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition group ${
+                    dragActive
+                      ? "border-purple-500 bg-purple-100"
+                      : isDark
+                      ? "border-slate-800 bg-slate-900/30 hover:border-purple-500 hover:bg-slate-800/10"
+                      : "border-slate-200 bg-slate-50/50 hover:border-purple-500 hover:bg-slate-50"
+                  }`}
+                >
                   <input
                     type="file"
                     accept="image/*"
@@ -362,28 +367,27 @@ const handleDrop = (e) => {
                   <span className={`text-xs font-bold ${isDark ? "text-slate-300 group-hover:text-slate-200" : "text-slate-600 group-hover:text-slate-850"}`}>Upload Photo File</span>
                   <span className="text-[10px] text-slate-400 mt-1">Browse computer for photo</span>
                 </label>
-               {uploadProgress > 0 && (
-  <div className="mt-4 w-full">
-    <div className="flex justify-between text-xs mb-1">
-      <span>
-        {uploadProgress === 100
-          ? "Upload Complete ✅"
-          : "Uploading Image..."}
-      </span>
+                {uploadProgress > 0 && (
+                  <div className="mt-4 w-full">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span>
+                        {uploadProgress === 100
+                          ? "Upload Complete ✅"
+                          : "Uploading Image..."}
+                      </span>
+                      <span>{uploadProgress}%</span>
+                    </div>
 
-      <span>{uploadProgress}%</span>
-    </div>
-
-    <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-      <div
-        className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-300"
-        style={{
-          width: `${uploadProgress}%`,
-        }}
-      />
-    </div>
-  </div>
-)}
+                    <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-300"
+                        style={{
+                          width: `${uploadProgress}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex flex-col justify-center space-y-2">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Or paste public URL</p>
@@ -424,7 +428,7 @@ const handleDrop = (e) => {
           <button 
             type="button"
             disabled={isSaving}
-            onClick={handleSaveProfile} // ◄--- Call our new custom cloud sync save handler
+            onClick={handleSaveProfile}
             className="px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSaving ? "Syncing Metrics..." : "Save Portfolio"}

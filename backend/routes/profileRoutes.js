@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { getProfile, updateProfile } = require('../controllers/profileController');
-const { verifyToken } = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 
-router.get('/:userId', verifyToken, getProfile);
-router.put('/update', verifyToken, updateProfile);
+router.get('/:userId', protect, getProfile);
+router.put('/update', protect, updateProfile);
 
 module.exports = router;

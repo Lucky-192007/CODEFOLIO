@@ -7,7 +7,7 @@ import axios from "axios";
 
 //  API base — set VITE_API in your frontend/.env file
 // e.g. VITE_API=http://localhost:5000/api
-const API = import.meta.env.VITE_API;
+const API = import.meta.env.VITE_API || "http://localhost:5000/api";
 
 function Projects() {
   const { projects, setProjects, theme } = usePortfolio();
