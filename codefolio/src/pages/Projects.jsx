@@ -3,6 +3,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { usePortfolio } from "../context/PortfolioContext";
 import { useAuth } from "../context/AuthContext";
 import { Plus, Trash, GitBranch, ExternalLink, Award, Upload, X, Link, Edit2 } from "lucide-react";
+import axios from "axios";
 
 //  API base — set VITE_API in your frontend/.env file
 // e.g. VITE_API=http://localhost:5000/api
@@ -15,6 +16,7 @@ function Projects() {
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const [project, setProject] = useState({
     title: "",
@@ -26,55 +28,66 @@ function Projects() {
   });
 
   const uploadImage = async (file) => {
-    if (!file) return;
-    const allowed = ["image/jpeg", "image/png", "image/webp"];
+  if (!file) return;
 
-    if (!allowed.includes(file.type)) {
-      alert("Only JPG, PNG and WEBP images are allowed.");
-      return;
-    }
+  const allowed = ["image/jpeg", "image/png", "image/webp"];
 
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Image must be under 5 MB.");
-      return;
-    }
+  if (!allowed.includes(file.type)) {
+    alert("Only JPG, PNG and WEBP images are allowed.");
+    return;
+  }
 
-    setIsUploading(true);
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
+  if (file.size > 5 * 1024 * 1024) {
+    alert("Image must be under 5 MB.");
+    return;
+  }
 
-    reader.onloadend = async () => {
-      try {
-        //  Fix 1: Corrected upload URL from /api/image → /api/upload/image
-        const response = await fetch(`${API}/upload/image`, {
-          method: "POST",
+  setIsUploading(true);
+  setUploadProgress(0);
+
+  const reader = new FileReader();
+
+  reader.readAsDataURL(file);
+
+  reader.onloadend = async () => {
+    try {
+      const response = await axios.post(
+        `${API}/upload/image`,
+        {
+          image: reader.result,
+        },
+        {
           headers: {
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
           },
-          body: JSON.stringify({ image: reader.result }),
-        });
 
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || "Upload failed");
+          onUploadProgress: (progressEvent) => {
+            const percent = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
 
-        setProject((prev) => ({
-          ...prev,
-          screenshot: data.imageUrl,
-        }));
-      } catch (err) {
-        console.error(err);
-        alert(err.message || "Unable to upload image.");
-      } finally {
+            setUploadProgress(percent);
+          },
+        }
+      );
+
+      setProject((prev) => ({
+        ...prev,
+        screenshot: response.data.imageUrl,
+      }));
+
+      setUploadProgress(100);
+    } catch (err) {
+      alert(err.response?.data?.message || err.message);
+    } finally {
+      setTimeout(() => {
+        setUploadProgress(0);
         setIsUploading(false);
-      }
-    };
-
-    reader.onerror = () => {
-      setIsUploading(false);
-      alert("Failed to read image.");
-    };
+      }, 500);
+    }
   };
+};
 
   //  Fix 2: Restored missing handleFileChange handler
   const handleFileChange = (e) => {
@@ -366,11 +379,30 @@ function Projects() {
                     <img src={project.screenshot} alt="Thumbnail preview" referrerPolicy="no-referrer" className="w-16 h-12 object-cover rounded border border-transparent shadow-sm" />
                     <div className="flex-1 min-w-0">
                       <p className={`text-xs font-bold truncate ${isDark ? "text-slate-200" : "text-slate-800"}`}>
-                        {isUploading ? "Uploading..." : "Screenshot Ready"}
+                        {/* {isUploading ? "Uploading..." : "Screenshot Ready"} */} // fix 5: Removed text and new text below
+                        {isUploading
+                        ? `Uploading... ${uploadProgress}%`
+                        : "Screenshot Ready"}
                       </p>
+                     
                       <p className="text-[10px] text-slate-400">
-                        {isUploading ? "Please wait..." : "Successfully uploaded"}
-                      </p>
+  {isUploading ? "Please wait..." : "Successfully uploaded"}
+</p>
+
+{isUploading && (
+  <div className="mt-3">
+    <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+      <div
+        className="bg-purple-600 h-2 transition-all duration-300"
+        style={{ width: `${uploadProgress}%` }}
+      />
+    </div>
+
+    <p className="text-[10px] mt-1 text-slate-400">
+      {uploadProgress}% Uploaded
+    </p>
+  </div>
+)}
                     </div>
                   </div>
                 ) : (
