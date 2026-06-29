@@ -4,11 +4,17 @@ import { usePortfolio } from "../context/PortfolioContext";
 import { useAuth } from "../context/AuthContext";
 import { Plus, Trash, GitBranch, ExternalLink, Award, Upload, X, Link, Edit2 } from "lucide-react";
 
+//  API base — set VITE_API in your frontend/.env file
+// e.g. VITE_API=http://localhost:5000/api
+const API = import.meta.env.VITE_API;
+
 function Projects() {
   const { projects, setProjects, theme } = usePortfolio();
   const { user, token } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingId, setEditingId] = useState(null); 
+  const [isUploading, setIsUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   const [project, setProject] = useState({
     title: "",
@@ -19,26 +25,89 @@ function Projects() {
     screenshot: "",
   });
 
+  const uploadImage = async (file) => {
+    if (!file) return;
+    const allowed = ["image/jpeg", "image/png", "image/webp"];
 
+    if (!allowed.includes(file.type)) {
+      alert("Only JPG, PNG and WEBP images are allowed.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image must be under 5 MB.");
+      return;
+    }
+
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    reader.onloadend = async () => {
+      try {
+        //  Fix 1: Corrected upload URL from /api/image → /api/upload/image
+        const response = await fetch(`${API}/upload/image`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify({ image: reader.result }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Upload failed");
+
+        setProject((prev) => ({
+          ...prev,
+          screenshot: data.imageUrl,
+        }));
+      } catch (err) {
+        console.error(err);
+        alert(err.message || "Unable to upload image.");
+      } finally {
+        setIsUploading(false);
+      }
+    };
+
+    reader.onerror = () => {
+      setIsUploading(false);
+      alert("Failed to read image.");
+    };
+  };
+
+  //  Fix 2: Restored missing handleFileChange handler
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProject((prev) => ({
-          ...prev,
-          screenshot: reader.result
-        }));
-      };
-      reader.readAsDataURL(file);
+      uploadImage(file);
     }
   };
 
   const removeSelectedScreenshot = () => {
     setProject((prev) => ({
       ...prev,
-      screenshot: ""
+      screenshot: "",
     }));
+  };
+
+  //  Fix 5 (minor): Safer optional chaining in handleDrop
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragActive(false);
+
+    const file = e.dataTransfer?.files?.[0];
+    if (!file) return;
+    uploadImage(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setDragActive(true);
+  };
+
+  const handleDragLeave = () => {
+    setDragActive(false);
   };
 
   const startEdit = (item, index) => {
@@ -66,7 +135,6 @@ function Projects() {
     });
   };
 
-  // HANDLE SUBMIT (CREATE OR UPDATE)
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!project.title.trim()) return;
@@ -81,9 +149,10 @@ function Projects() {
       ? project.techStack.split(",").map((t) => t.trim()).filter((t) => !!t)
       : [];
 
-    const endpoint = editingId 
-      ? "http://localhost:5000/api/auth/update-project" 
-      : "http://localhost:5000/api/auth/add-project";
+    //  Fix 5: Using API constant for all endpoints
+    const endpoint = editingId
+      ? `${API}/auth/update-project`
+      : `${API}/auth/add-project`;
 
     const method = editingId ? "PUT" : "POST";
 
@@ -97,7 +166,7 @@ function Projects() {
         github: project.github.trim(),
         live: project.live.trim(),
         screenshot: project.screenshot,
-      }
+      },
     };
 
     try {
@@ -105,7 +174,7 @@ function Projects() {
         method: method,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });
@@ -116,10 +185,8 @@ function Projects() {
         throw new Error(data.message || "Failed to save project.");
       }
 
-      // Safeguard against missing or nested payload returns
       setProjects(data.projects || data.user?.projects || []);
       cancelEdit();
-
     } catch (err) {
       alert(err.message);
     } finally {
@@ -127,7 +194,6 @@ function Projects() {
     }
   };
 
-  // HANDLE DELETE
   const handleDelete = async (indexToDelete, projectId) => {
     if (!user?.id) return;
 
@@ -138,15 +204,16 @@ function Projects() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/delete-project", {
+      //  Fix 5: Using API constant
+      const response = await fetch(`${API}/auth/delete-project`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}` 
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-        userId: user.id,
-        projectIdentifier: targetIdentifier,
+          userId: user.id,
+          projectIdentifier: targetIdentifier,
         }),
       });
 
@@ -158,7 +225,6 @@ function Projects() {
 
       setProjects(data.projects || data.user?.projects || []);
       if (editingId === targetIdentifier) cancelEdit();
-
     } catch (err) {
       alert(err.message);
     }
@@ -297,21 +363,40 @@ function Projects() {
 
                 {project.screenshot ? (
                   <div className={`relative border rounded-xl p-2.5 flex items-center gap-3 transition ${isDark ? "bg-slate-950 border-slate-800" : "bg-slate-50 border-slate-200"}`}>
-                    <img src={project.screenshot} alt="Thumbnail preview" className="w-16 h-12 object-cover rounded border border-transparent shadow-sm" />
+                    <img src={project.screenshot} alt="Thumbnail preview" referrerPolicy="no-referrer" className="w-16 h-12 object-cover rounded border border-transparent shadow-sm" />
                     <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-bold truncate ${isDark ? "text-slate-200" : "text-slate-800"}`}>Screenshot loaded</p>
-                      <p className="text-[10px] text-slate-400">Successfully synced</p>
+                      <p className={`text-xs font-bold truncate ${isDark ? "text-slate-200" : "text-slate-800"}`}>
+                        {isUploading ? "Uploading..." : "Screenshot Ready"}
+                      </p>
+                      <p className="text-[10px] text-slate-400">
+                        {isUploading ? "Please wait..." : "Successfully uploaded"}
+                      </p>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <label className={`border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition group ${
-                      isDark ? "border-slate-800 bg-slate-900/30 hover:border-purple-500 hover:bg-slate-800/10" : "border-slate-200 bg-slate-50/50 hover:border-purple-500 hover:bg-slate-50"
-                    }`}>
+                    {/*  Fix 3 & 4: Drag-and-drop events attached + dragActive highlight applied */}
+                    <label
+                      onDrop={handleDrop}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      className={`border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition group ${
+                        dragActive
+                          ? isDark
+                            ? "border-purple-500 bg-purple-950/20"
+                            : "border-purple-500 bg-purple-50"
+                          : isDark
+                          ? "border-slate-800 bg-slate-900/30 hover:border-purple-500 hover:bg-slate-800/10"
+                          : "border-slate-200 bg-slate-50/50 hover:border-purple-500 hover:bg-slate-50"
+                      }`}
+                    >
+                      {/*  Fix 2: handleFileChange now defined and wired up */}
                       <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                       <Upload className="w-5 h-5 text-slate-400 group-hover:text-purple-500 group-hover:scale-110 transition duration-150 mb-1" />
-                      <span className={`text-xs font-bold ${isDark ? "text-slate-300" : "text-slate-600"}`}>Choose Image File</span>
-                      <span className="text-[9px] text-slate-400 mt-0.5">Click or drag &amp; drop</span>
+                      <span className={`text-xs font-bold ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+                        {isUploading ? "Uploading..." : "Choose Image File"}
+                      </span>
+                      <span className="text-[9px] text-slate-400 mt-0.5">Drag & Drop or Click to Upload</span>
                     </label>
 
                     <div className="relative">
@@ -333,18 +418,23 @@ function Projects() {
               </div>
 
               <div className="flex flex-col gap-2">
-                {/* Fixed the open element angle bracket and typography layout syntax targets here */}
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isUploading}
                   className={`w-full py-3 px-4 rounded-xl text-xs uppercase tracking-wider font-extrabold shadow transition-all duration-150 flex items-center justify-center gap-2 disabled:opacity-50 ${
-                    editingId 
-                      ? "bg-amber-500 hover:bg-amber-600 text-slate-950" 
+                    editingId
+                      ? "bg-amber-500 hover:bg-amber-600 text-slate-950"
                       : "bg-purple-600 hover:bg-purple-700 text-white"
                   }`}
                 >
                   {editingId ? <Edit2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                  {isSubmitting ? "Syncing..." : editingId ? "Update Project" : "Add to Showcase"}
+                  {isUploading
+                    ? "Uploading Image..."
+                    : isSubmitting
+                    ? "Syncing..."
+                    : editingId
+                    ? "Update Project"
+                    : "Add to Showcase"}
                 </button>
 
                 {editingId && (

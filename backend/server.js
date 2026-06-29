@@ -19,7 +19,7 @@ app.use(
         connectSrc: ["'self'", "http://localhost:5173", "http://localhost:5000"], // ◄--- Permits direct local communication pipelines
         scriptSrc: ["'self'", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-       imgSrc: ["'self'", "data:", "blob:", "https://images.unsplash.com"],// ◄--- Allows profile photos, screenshots, and base64 images to load safely
+       imgSrc: ["'self'", "data:", "blob:", "https://images.unsplash.com" ,   "https://res.cloudinary.com",],// ◄--- Allows profile photos, screenshots, and base64 images to load safely
       },
     },
   })
@@ -49,8 +49,11 @@ app.get('/', (req, res) => {
 });
 
 // 3. Application Route Mount Points
-const authRoutes = require('./routes/authRoutes');
-app.use('/api/auth', authRoutes); 
+const authRoutes = require("./routes/authRoutes");
+const uploadRoutes = require("./routes/uploadRoutes");
+
+app.use("/api/auth", authRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // 4. Live Server Listener Process
 const PORT = process.env.PORT || 5000;
