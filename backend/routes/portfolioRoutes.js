@@ -1,8 +1,10 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { getPublicPortfolio } = require('../controllers/portfolioController');
 
-// Public — no token required
-router.get('/:userId', getPublicPortfolio);
+const {
+    getPublicPortfolio
+} = require("../controllers/portfolioController");
+
+router.get("/:username", getPublicPortfolio);
 
 module.exports = router;

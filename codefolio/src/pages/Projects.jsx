@@ -379,7 +379,7 @@ function Projects() {
                     <img src={project.screenshot} alt="Thumbnail preview" referrerPolicy="no-referrer" className="w-16 h-12 object-cover rounded border border-transparent shadow-sm" />
                     <div className="flex-1 min-w-0">
                       <p className={`text-xs font-bold truncate ${isDark ? "text-slate-200" : "text-slate-800"}`}>
-                        {/* {isUploading ? "Uploading..." : "Screenshot Ready"} */} // fix 5: Removed text and new text below
+                        
                         {isUploading
                         ? `Uploading... ${uploadProgress}%`
                         : "Screenshot Ready"}
