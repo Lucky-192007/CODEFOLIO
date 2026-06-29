@@ -3,9 +3,7 @@ const User = require('../models/User');
 const addSkill = async (req, res) => {
   try {
     const { userId, skill } = req.body;
-    if (!userId || !skill?.name) {
-      return res.status(400).json({ message: "Missing required parameters." });
-    }
+    if (!userId || !skill?.name) return res.status(400).json({ message: "Missing required parameters." });
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User profile not found." });
     if (!user.skills) user.skills = [];

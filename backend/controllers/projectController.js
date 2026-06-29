@@ -3,9 +3,7 @@ const User = require('../models/User');
 const addProject = async (req, res) => {
   try {
     const { userId, project } = req.body;
-    if (!userId || !project?.title) {
-      return res.status(400).json({ message: "Missing required project attributes." });
-    }
+    if (!userId || !project?.title) return res.status(400).json({ message: "Missing required project attributes." });
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User profile not found." });
     if (!user.projects) user.projects = [];
@@ -20,9 +18,7 @@ const addProject = async (req, res) => {
 const updateProject = async (req, res) => {
   try {
     const { userId, projectIdentifier, project } = req.body;
-    if (!userId || !projectIdentifier) {
-      return res.status(400).json({ message: "Missing matching transaction arguments." });
-    }
+    if (!userId || !projectIdentifier) return res.status(400).json({ message: "Missing matching transaction arguments." });
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User profile context not found." });
 
@@ -37,12 +33,12 @@ const updateProject = async (req, res) => {
       return res.status(404).json({ message: "Target project not found in matrix stack." });
     }
 
-    user.projects[targetIndex].title = project.title || user.projects[targetIndex].title;
+    user.projects[targetIndex].title       = project.title       || user.projects[targetIndex].title;
     user.projects[targetIndex].description = project.description !== undefined ? project.description : user.projects[targetIndex].description;
-    user.projects[targetIndex].techStack = project.techStack || user.projects[targetIndex].techStack;
-    user.projects[targetIndex].github = project.github !== undefined ? project.github : user.projects[targetIndex].github;
-    user.projects[targetIndex].live = project.live !== undefined ? project.live : user.projects[targetIndex].live;
-    user.projects[targetIndex].screenshot = project.screenshot !== undefined ? project.screenshot : user.projects[targetIndex].screenshot;
+    user.projects[targetIndex].techStack   = project.techStack   || user.projects[targetIndex].techStack;
+    user.projects[targetIndex].github      = project.github      !== undefined ? project.github      : user.projects[targetIndex].github;
+    user.projects[targetIndex].live        = project.live        !== undefined ? project.live        : user.projects[targetIndex].live;
+    user.projects[targetIndex].screenshot  = project.screenshot  !== undefined ? project.screenshot  : user.projects[targetIndex].screenshot;
 
     await user.save();
     res.status(200).json({ message: "Project record modified safely", projects: user.projects });

@@ -27,13 +27,9 @@ const login = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid email or password credentials." });
-    }
+    if (!user) return res.status(400).json({ message: "Invalid email or password credentials." });
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid email or password credentials." });
-    }
+    if (!isMatch) return res.status(400).json({ message: "Invalid email or password credentials." });
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
     res.json({ token, user: { id: user._id, username: user.username, email: user.email } });
   } catch (error) {
@@ -45,16 +41,8 @@ const register = async (req, res) => {
   const { email, username, password } = req.body;
   try {
     const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ message: "An account with that email already exists." });
-    }
-    const newUser = new User({
-      email,
-      username,
-      password,
-      skills: DEFAULT_SKILLS,
-      projects: DEFAULT_PROJECTS
-    });
+    if (userExists) return res.status(400).json({ message: "An account with that email already exists." });
+    const newUser = new User({ email, username, password, skills: DEFAULT_SKILLS, projects: DEFAULT_PROJECTS });
     await newUser.save();
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
     res.status(201).json({ token, user: { id: newUser._id, username: newUser.username, email: newUser.email } });
