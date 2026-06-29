@@ -43,6 +43,8 @@ const UserSchema = new mongoose.Schema({
   
   photo: { type: String, default: "" },
   resume: {type: String,default: ""},
+  templateId: {type: String,default: "minimal"},
+  isPro: { type: Boolean, default: false },
   skills: [SkillSchema],
   projects: [ProjectSchema]
 }, {

@@ -51,9 +51,11 @@ app.get('/', (req, res) => {
 // 3. Application Route Mount Points
 const authRoutes = require("./routes/authRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
+const portfolioRoutes = require("./routes/portfolioRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/portfolio", portfolioRoutes);
 
 // 4. Live Server Listener Process
 const PORT = process.env.PORT || 5000;
