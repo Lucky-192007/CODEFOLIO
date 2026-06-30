@@ -27,7 +27,14 @@ const ProjectSchema = new mongoose.Schema({
 
 // Main User Account Schema configuration
 const UserSchema = new mongoose.Schema({
-  username: { type: String, required: true, trim: true },
+  username: {
+    type: String,
+    required: true,
+    trim: true,
+    unique: true,
+    lowercase: true,
+    match: [/^[a-z0-9-]+$/, "Username can only contain lowercase letters, numbers, and hyphens."]
+  },
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password: { type: String, required: true },
   
