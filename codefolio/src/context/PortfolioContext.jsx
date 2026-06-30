@@ -165,9 +165,9 @@ export function PortfolioProvider({ children }) {
           experience: data.user.experience || initialProfile.experience,
           location: data.user.location || initialProfile.location,
           bio: data.user.bio || initialProfile.bio,
-          github: data.user.githubUrl || data.user.github || initialProfile.github,
-          linkedin: data.user.linkedinUrl || data.user.linkedin || initialProfile.linkedin,
-          website: data.user.websiteUrl || data.user.website || initialProfile.website,
+          github: data.user.github || data.user.github || initialProfile.github,
+          linkedin: data.user.linkedin  || data.user.linkedin || initialProfile.linkedin,
+          website: data.user.website || data.user.website || initialProfile.website,
           photo: data.user.photo || initialProfile.photo,
         });
 

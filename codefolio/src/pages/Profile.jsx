@@ -23,9 +23,9 @@ function Profile() {
       experience: profile.experience || user?.experience || "",
       email: profile.email || user?.email || "",
       location: profile.location || user?.location || "",
-      github: profile.github || user?.githubUrl || "",
-      linkedin: profile.linkedin || user?.linkedinUrl || "",
-      website: profile.website || user?.websiteUrl || "",
+      github: profile.github || user?.github || "",
+      linkedin: profile.linkedin || user?.linkedin || "",
+      website: profile.website || user?.website || "",
       resume: profile.resume || "",
       bio: profile.bio || user?.bio || "",
       photo: profile.photo || ""

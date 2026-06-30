@@ -2,6 +2,7 @@ import { usePortfolio } from "../../context/PortfolioContext";
 import { Link } from "react-router-dom";
 import { Briefcase, Award, Eye, ExternalLink } from "lucide-react";
 
+
 function LivePreview() {
   const { profile, projects, skills, templateId, theme } = usePortfolio();
 

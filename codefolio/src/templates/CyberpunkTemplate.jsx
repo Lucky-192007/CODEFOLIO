@@ -2,6 +2,7 @@ import { useState } from "react";
 import { usePortfolio } from "../context/PortfolioContext";
 import { ensureAbsoluteUrl } from "../utils/url";
 import { motion } from "framer-motion"; // Adjusted to standard package name
+import profilepic from "../assets/profilepic.jpeg";
 import {
   Globe,
   Mail,
@@ -170,7 +171,7 @@ function CyberpunkTemplate() {
               <img
                 src={
                   profile.photo ||
-                  "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=400&auto=format&fit=crop"
+                  profilepic
                 }
                 alt="GRID OPERATIVE"
                 referrerPolicy="no-referrer"

@@ -18,13 +18,14 @@ app.use(
         connectSrc: ["'self'", "http://localhost:5173", "http://localhost:5000"],
         scriptSrc: ["'self'", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: [
-          "'self'",
-          "data:",
-          "blob:",
-          "https://images.unsplash.com",
-          "https://res.cloudinary.com",
-        ],
+imgSrc: [
+ "'self'",
+ "data:",
+ "blob:",
+ "https://images.unsplash.com",
+ "https://res.cloudinary.com",
+ "https://via.placeholder.com"
+],
       },
     },
   })

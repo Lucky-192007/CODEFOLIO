@@ -2,6 +2,7 @@ import { useState } from "react";
 import { usePortfolio } from "../context/PortfolioContext";
 import { ensureAbsoluteUrl } from "../utils/url";
 import { motion } from "motion/react";
+import profilepic from "../assets/profilepic.jpeg";
 import {
   Globe,
   Mail,
@@ -16,8 +17,15 @@ import {
   Link
 } from "lucide-react";
 
-function MinimalTemplate() {
-  const { profile, projects, skills } = usePortfolio();
+
+function MinimalTemplate({ portfolio }) {
+
+  const context = usePortfolio();
+
+  const profile = portfolio || context.profile;
+  const projects = portfolio?.projects || context.projects;
+  const skills = portfolio?.skills || context.skills;
+  
   const [copied, setCopied] = useState(false);
 
   const copyEmail = () => {
@@ -159,9 +167,8 @@ function MinimalTemplate() {
               
               <img
                 src={
-                  profile.photo ||
-                  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop"
-                }
+                  profile.photo ||profilepic
+                  }
                 alt={profile.fullName || "Portfolio Owner"}
                 referrerPolicy="no-referrer"
                 className="relative w-64 h-64 sm:w-72 sm:h-72 object-cover rounded-[2rem] border-4 border-white shadow-xl saturate-95 hover:saturate-100 transition-all duration-300 transform hover:scale-[1.02]"

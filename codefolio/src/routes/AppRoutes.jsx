@@ -10,6 +10,7 @@ import Skills from "../pages/Skills";
 import Theme from "../pages/Theme";
 import Preview from "../pages/Preview";
 import ResetPasswordPage from "../pages/ResetPasswordPage";
+import PublicPortfolio from "../pages/PublicPortfolio";
 
 // A clean component wrapper to isolate protected dashboard pages safely
 const ProtectedRoute = ({ children }) => {
@@ -40,6 +41,7 @@ function AppRoutes() {
       <Route path="/preview" element={<ProtectedRoute><Preview /></ProtectedRoute>} />
       <Route path="/portfolio" element={<ProtectedRoute><PortfolioPage /></ProtectedRoute>} />
       <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+      <Route path="/:username" element={<PublicPortfolio />} />
 
       {/* Catch-all fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

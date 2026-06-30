@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getPublicPortfolio } from "../api/portfolioApi";
+import profilepic from "../assets/profilepic.jpeg";
+
 
 function PublicPortfolio() {
 
@@ -56,7 +58,7 @@ function PublicPortfolio() {
 
                 <img
 
-                    src={portfolio.photo || "https://via.placeholder.com/150"}
+                    src={portfolio.photo || "profilepic"}
 
                     alt="profile"
 
