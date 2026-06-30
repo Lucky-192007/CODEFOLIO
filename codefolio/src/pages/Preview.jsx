@@ -165,7 +165,9 @@ function Preview() {
             </a>
 
             {/* Phase 6.4 — Portfolio Sharing */}
-            <ShareMenu />
+            <div className="relative z-50">
+              <ShareMenu />
+            </div>
           </div>
         </div>
 

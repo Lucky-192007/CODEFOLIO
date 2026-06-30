@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { usePortfolio } from "../../context/PortfolioContext";
 import { useAuth } from "../../context/AuthContext";
 import { Share2, Copy, Check, MessageCircle } from "lucide-react";
@@ -16,6 +17,8 @@ function ShareMenu() {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const menuRef = useRef(null);
+  const buttonRef = useRef(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
 
   const isDark = theme === "dark";
   const username = user?.username;
@@ -27,16 +30,50 @@ function ShareMenu() {
     ? `Check out ${profile.fullName}'s developer portfolio!`
     : "Check out my developer portfolio!";
 
-  // Close on outside click
+  const portalRef = useRef(null);
+
+  // Close on outside click — has to check both the trigger button and the
+  // portaled dropdown, since the dropdown no longer lives inside menuRef
+  // once it's rendered into document.body.
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
+      if (
+        menuRef.current && !menuRef.current.contains(e.target) &&
+        portalRef.current && !portalRef.current.contains(e.target)
+      ) {
         setOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Recalculate the dropdown's screen position whenever it opens, and keep
+  // it pinned to the button while the page scrolls or resizes.
+  useEffect(() => {
+    if (!open) return;
+
+    const updatePosition = () => {
+      if (!buttonRef.current) return;
+      const rect = buttonRef.current.getBoundingClientRect();
+      const menuWidth = 256; // matches w-64 below
+      setMenuPos({
+        top: rect.bottom + window.scrollY + 8,
+        left: Math.min(
+          rect.right + window.scrollX - menuWidth,
+          window.innerWidth - menuWidth - 12
+        ),
+      });
+    };
+
+    updatePosition();
+    window.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
+    return () => {
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
+    };
+  }, [open]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(publicUrl);
@@ -81,6 +118,7 @@ function ShareMenu() {
   return (
     <div className="relative" ref={menuRef}>
       <button
+        ref={buttonRef}
         onClick={() => setOpen((prev) => !prev)}
         className="py-2.5 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-extrabold uppercase tracking-wide shadow-md shadow-purple-600/10 transition-all flex items-center gap-1.5"
       >
@@ -88,9 +126,11 @@ function ShareMenu() {
         Share
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
-          className={`absolute right-0 mt-2 w-64 rounded-2xl border shadow-xl z-50 overflow-hidden ${
+          ref={portalRef}
+          style={{ position: "fixed", top: menuPos.top, left: menuPos.left }}
+          className={`w-64 rounded-2xl border shadow-xl z-[999] overflow-hidden ${
             isDark
               ? "bg-slate-900 border-slate-800 text-white"
               : "bg-white border-slate-200 text-slate-900"
@@ -127,7 +167,8 @@ function ShareMenu() {
               {link.label}
             </a>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
