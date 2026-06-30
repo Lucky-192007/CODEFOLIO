@@ -19,7 +19,7 @@ const APP_HOSTS = [
   "localhost",
   "127.0.0.1",
   "10.211.239.174",
-  "codefolio-delta-dusky.vercel.app",
+  "https://codefolio-delta-dusky.vercel.app/auth",
    
 ];
 
