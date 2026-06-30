@@ -27,11 +27,11 @@ function Theme() {
     },
     {
       id: "corporate",
-      name: "corporate",
-      desc: "A high-fidelity retro hud featuring neon glowing frames, digital status lines, and monospace text elements.",
+      name: "Corporate Professional",
+      desc: "A polished, business-ready layout with structured sections, confident typography, and a trustworthy blue accent palette.",
       badge: "Free tier",
       isLocked: false,
-      color: "bg-cyan-50/20 border-cyan-500/30"
+      color: "bg-blue-50/20 border-blue-500/30"
     },
     {
       id: "glassmorphic",
@@ -225,8 +225,8 @@ function Theme() {
                   >
                     Got it, dismissal
                   </button>
-                  <p className="text-[10px] text-slate-400 font-bold">
-                    Choose Minimalist or Synth Cyberpunk in the grid behind to customize
+                  <p className={`text-[10px] text-slate-400 font-bold`}>
+                    Choose Minimalist, Synth Cyberpunk, or Corporate Professional in the grid behind to customize
                   </p>
                 </div>
               </motion.div>
