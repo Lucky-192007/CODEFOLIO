@@ -2,6 +2,7 @@ import { useState } from "react";
 import { usePortfolio } from "../context/PortfolioContext";
 import { ensureAbsoluteUrl } from "../utils/url";
 import { motion } from "motion/react";
+import ContactForm from "../components/shared/ContactForm";
 import {
   Globe,
   Mail,
@@ -350,31 +351,9 @@ function CorporateTemplate({ portfolio }) {
             Get in touch to request structured technical consulting, enterprise projects validation, or freelance collaboration inquiries.
           </p>
 
-          {profile.email ? (
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <span className="text-base font-bold text-slate-800 font-mono px-4 py-2 bg-slate-100 rounded-xl">
-                {profile.email}
-              </span>
-              <button
-                onClick={copyEmail}
-                className="flex items-center gap-2 px-6 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition shadow-sm w-full sm:w-auto"
-              >
-                {copied ? (
-                  <>
-                    <Check className="w-4 h-4 text-emerald-400" /> Copied Email!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4" /> Copy Email Address
-                  </>
-                )}
-              </button>
-            </div>
-          ) : (
-            <div className="p-4 bg-amber-50 text-amber-800 inline-block rounded-xl border border-amber-200 text-xs font-bold leading-normal">
-              ⚠️ Email credentials not assigned. Create in the Dashboard Profile!
-            </div>
-          )}
+          <div className="max-w-md mx-auto text-left">
+            <ContactForm username={profile.username} variant="corporate" />
+          </div>
         </div>
       </section>
 

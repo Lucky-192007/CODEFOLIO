@@ -2,6 +2,7 @@ import { useState } from "react";
 import { usePortfolio } from "../context/PortfolioContext";
 import { ensureAbsoluteUrl } from "../utils/url";
 import { motion } from "framer-motion"; // Adjusted to standard package name
+import ContactForm from "../components/shared/ContactForm";
 import {
   Globe,
   Mail,
@@ -372,31 +373,8 @@ function CyberpunkTemplate({ portfolio }) {
             </p>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-6 justify-center max-w-2xl mx-auto pt-6">
-            {profile.email ? (
-              <div 
-                onClick={copyEmail}
-                className="flex-1 bg-[#100325] border-2 border-cyan-500/30 hover:border-cyan-400 p-5 rounded-xl cursor-pointer transition flex items-center justify-between text-left group"
-                title="Click to copy uplink link"
-              >
-                <div>
-                  <div className="text-[10px] text-pink-500 font-black tracking-widest uppercase pb-1 flex items-center gap-1">
-                    <Shield className="w-3.5 h-3.5 text-pink-500" />
-                    EMAIL_UPLINK
-                  </div>
-                  <div className="text-xs font-black tracking-wider text-slate-200 truncate pr-4 font-mono select-all">
-                    {profile.email.toUpperCase()}
-                  </div>
-                </div>
-                <button className="text-cyan-500 group-hover:text-cyan-400 transition bg-slate-950 border border-cyan-500/20 p-2 rounded-lg">
-                  {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                </button>
-              </div>
-            ) : (
-              <div className="flex-1 bg-[#100325] border-2 border-purple-950 p-5 rounded-xl text-center text-xs text-cyan-600 font-black">
-                UPLINK SCHEMATICS MISSING (NO EMAIL CONFIGURED)
-              </div>
-            )}
+          <div className="max-w-md mx-auto pt-6 text-left">
+            <ContactForm username={profile.username} variant="cyberpunk" />
           </div>
 
           <div className="flex justify-center gap-6 pt-4">

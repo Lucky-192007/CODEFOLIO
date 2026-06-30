@@ -3,6 +3,7 @@ import { usePortfolio } from "../context/PortfolioContext";
 import { ensureAbsoluteUrl } from "../utils/url";
 import { motion } from "motion/react";
 import profilepic from "../assets/profilepic.jpeg";
+import ContactForm from "../components/shared/ContactForm";
 import {
   Globe,
   Mail,
@@ -375,32 +376,8 @@ function MinimalTemplate({ portfolio }) {
             </div>
 
             <div className="bg-slate-800/50 backdrop-blur border border-slate-700/50 p-8 rounded-3xl space-y-6">
-              <h3 className="text-lg font-bold">Contact Card</h3>
-              
-              {profile.email ? (
-                <div 
-                  onClick={copyEmail}
-                  className="bg-slate-900 border border-slate-700/60 p-4 rounded-xl cursor-pointer hover:bg-slate-950 transition flex items-center justify-between"
-                  title="Click to Copy Email"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-purple-500/10 text-purple-400 rounded-lg">
-                      <Mail className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-slate-500 font-mono">EMAIL ADDRESS</p>
-                      <p className="text-sm font-semibold font-mono text-slate-200">{profile.email}</p>
-                    </div>
-                  </div>
-                  <button className="text-slate-400 hover:text-white transition p-1">
-                    {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                </div>
-              ) : (
-                <div className="bg-slate-900 border border-slate-700/60 p-4 rounded-xl text-center text-xs text-slate-500">
-                  No email address configured yet.
-                </div>
-              )}
+              <h3 className="text-lg font-bold">Send a Message</h3>
+              <ContactForm username={profile.username} variant="minimal" />
 
               <div className="flex gap-3">
                 {profile.github && (
