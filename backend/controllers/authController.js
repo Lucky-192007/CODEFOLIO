@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
+const sendEmail = require("../utils/sendEmail");
 
 const DEFAULT_SKILLS = [
   { category: "Programming Languages", name: "JavaScript" },
@@ -79,29 +80,63 @@ const login = async (req, res) => {
 const register = async (req, res) => {
   const { email, username, password } = req.body;
   try {
-    const userExists = await User.findOne({ email });
-    if (userExists) return res.status(400).json({ message: "An account with that email already exists." });
+    if (!email || !username || !password) {
+      return res.status(400).json({ message: "Email, username, and password are all required." });
+    }
+    const userExists = await User.findOne({ $or: [{ email }, { username: username.toLowerCase() }] });
+    if (userExists) {
+      const field = userExists.email === email ? "email" : "username";
+      return res.status(400).json({ message: `An account with that ${field} already exists.` });
+    }
     const newUser = new User({ email, username, password, skills: DEFAULT_SKILLS, projects: DEFAULT_PROJECTS });
     await newUser.save();
     const token = generateToken(newUser._id);
-    // const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
     res.status(201).json({ token, user: { id: newUser._id, username: newUser.username, email: newUser.email } });
-  }catch (error) {
-  console.error("REGISTER ERROR:", error);
-
-  res.status(500).json({
-    message: error.message,
-  });
-}
+  } catch (error) {
+    console.error("REGISTER ERROR:", error);
+    // Mongo duplicate-key error (race condition / unique index hit)
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern || { username: 1 })[0];
+      return res.status(400).json({ message: `That ${field} is already taken.` });
+    }
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ message: Object.values(error.errors)[0].message });
+    }
+    res.status(500).json({ message: error.message });
+  }
 };
 
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "No workspace profile matches that email address." });
+    // Always return the same generic message whether or not the user exists,
+    // so this endpoint can't be used to find out which emails are registered.
+    const genericResponse = { message: "If an account exists for that email, a reset link has been sent." };
+    if (!user) return res.json(genericResponse);
+
     const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '15m' });
-    res.json({ message: "Password reset token generated.", resetLink: `http://localhost:5173/reset-password/${resetToken}` });
+    const resetLink = `${process.env.CLIENT_URL || "http://localhost:5173"}/reset-password/${resetToken}`;
+
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: "Reset your CodeFolio password",
+        html: `
+          <p>Hi ${user.username || ""},</p>
+          <p>We received a request to reset your CodeFolio password. This link expires in 15 minutes.</p>
+          <p><a href="${resetLink}">${resetLink}</a></p>
+          <p>If you didn't request this, you can safely ignore this email.</p>
+        `,
+      });
+    } catch (emailError) {
+      console.error("FORGOT-PASSWORD EMAIL ERROR:", emailError.message);
+      // In dev, if email isn't configured yet, fall back to logging the
+      // link to the server console so the flow is still testable.
+      console.log(`🔗 Password reset link for ${user.email}: ${resetLink}`);
+    }
+
+    res.json(genericResponse);
   } catch (error) {
     res.status(500).json({ message: "Server error during recovery request." });
   }
