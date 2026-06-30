@@ -30,7 +30,7 @@ const APP_HOSTS = [
   "localhost",
   "127.0.0.1",
   "10.211.239.174",
-  "your-deployed-app.com",
+  "codefolio-delta-dusky.vercel.app",
 ];
 
 const templateMap = {
