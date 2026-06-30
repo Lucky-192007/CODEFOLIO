@@ -25,7 +25,7 @@ app.use(
         connectSrc: [
           "'self'",
           "http://localhost:5173",
-          "http://localhost:5000",
+          "https://codefolio-dtdk.onrender.com",
           "http://127.0.0.1:5173",
           "http://127.0.0.1:5000",
           "http://10.211.239.174:5173",

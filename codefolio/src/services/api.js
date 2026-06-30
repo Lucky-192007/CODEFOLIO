@@ -3,7 +3,7 @@ import axios from "axios";
 const fallbackApi =
   typeof window !== "undefined"
     ? `${window.location.protocol}//${window.location.hostname}:5000/api`
-    : "http://localhost:5000/api";
+    : "https://codefolio-dtdk.onrender.com/api";
 
 const API = axios.create({
   baseURL: import.meta.env.VITE_API || fallbackApi,

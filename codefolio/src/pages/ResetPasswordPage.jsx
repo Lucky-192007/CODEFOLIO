@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Lock, ShieldCheck, CheckCircle2 } from "lucide-react";
 
-const API = import.meta.env.VITE_API || "http://localhost:5000/api";
+const API = import.meta.env.VITE_API || "https://codefolio-dtdk.onrender.com/api";
 
 function ResetPasswordPage() {
   const { token } = useParams();

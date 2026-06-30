@@ -6,8 +6,8 @@ import { Plus, Trash, GitBranch, ExternalLink, Award, Upload, X, Link, Edit2 } f
 import axios from "axios";
 
 //  API base — set VITE_API in your frontend/.env file
-// e.g. VITE_API=http://localhost:5000/api
-const API = import.meta.env.VITE_API || "http://localhost:5000/api";
+// e.g. VITE_API=https://codefolio-dtdk.onrender.com/api
+const API = import.meta.env.VITE_API || "https://codefolio-dtdk.onrender.com/api";
 
 function Projects() {
   const { projects, setProjects, theme } = usePortfolio();

@@ -36,7 +36,7 @@ function AuthPage() {
     if (!email) return alert("Please enter your registered email address.");
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:5000/api/auth/forgot-password", {
+      const response = await fetch("https://codefolio-dtdk.onrender.com/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

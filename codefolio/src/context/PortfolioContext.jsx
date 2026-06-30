@@ -7,7 +7,7 @@ import {
 import heroPhoto from "../assets/hero.png";
 import { useAuth } from "./AuthContext";
 
-const API = import.meta.env.VITE_API || "http://localhost:5000/api";
+const API = import.meta.env.VITE_API || "https://codefolio-dtdk.onrender.com/api";
 
 const PortfolioContext = createContext();
 

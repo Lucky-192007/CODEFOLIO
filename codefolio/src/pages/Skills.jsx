@@ -4,7 +4,7 @@ import { usePortfolio } from "../context/PortfolioContext";
 import { useAuth } from "../context/AuthContext";
 
 // API Base URL
-const API = import.meta.env.VITE_API || "http://localhost:5000/api";
+const API = import.meta.env.VITE_API || "https://codefolio-dtdk.onrender.com/api";
 
 function Skills() {
   const { skills, setSkills, theme } = usePortfolio();
