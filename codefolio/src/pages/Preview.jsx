@@ -5,6 +5,7 @@ import { useState } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { usePortfolio } from "../context/PortfolioContext";
 import MyPortfolioPreview from "./MyPortfolioPreview";
+import ShareMenu from "../components/dashboard/ShareMenu";
 import {
   Monitor,
   Smartphone,
@@ -162,6 +163,9 @@ function Preview() {
               Launch Site
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
+
+            {/* Phase 6.4 — Portfolio Sharing */}
+            <ShareMenu />
           </div>
         </div>
 
