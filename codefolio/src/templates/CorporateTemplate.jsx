@@ -3,6 +3,7 @@ import { usePortfolio } from "../context/PortfolioContext";
 import { ensureAbsoluteUrl } from "../utils/url";
 import { motion } from "motion/react";
 import ContactForm from "../components/shared/ContactForm";
+import ProBadge from "../components/shared/ProBadge";
 import {
   Globe,
   Mail,
@@ -25,6 +26,7 @@ function CorporateTemplate({ portfolio }) {
   const context = usePortfolio();
 
   const profile = portfolio || context.profile;
+  const isPro = portfolio?.isPro ?? context.isPro;
   const projects = portfolio?.projects || context.projects;
   const skills = portfolio?.skills || context.skills;
 
@@ -65,8 +67,9 @@ function CorporateTemplate({ portfolio }) {
               {profile.fullName ? profile.fullName.charAt(0) : "C"}
             </div>
             <div>
-              <span className="font-extrabold text-slate-900 tracking-tight text-base sm:text-lg block leading-none">
+              <span className="font-extrabold text-slate-900 tracking-tight text-base sm:text-lg flex items-center gap-2 leading-none">
                 {profile.fullName || "Corporate Professional"}
+                <ProBadge isPro={isPro} variant="corporate" />
               </span>
               <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 block mt-0.5">
                 Executive Portfolio
@@ -235,6 +238,8 @@ function CorporateTemplate({ portfolio }) {
                       alt={proj.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                       referrerPolicy="no-referrer"
+                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
                 ) : (

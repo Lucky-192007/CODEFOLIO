@@ -4,7 +4,8 @@
   "main": "server.js",
   "scripts": {
     "dev": "nodemon server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "seed": "node seed/seedDemoProfiles.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -16,7 +17,8 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.18.1",
     "multer": "^2.2.0",
-    "nodemailer": "^9.0.3"
+    "nodemailer": "^9.0.3",
+    "stripe": "^22.3.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

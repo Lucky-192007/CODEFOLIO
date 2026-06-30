@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { usePortfolio } from "../context/PortfolioContext";
 import { useAuth } from "../context/AuthContext"; 
-import { Upload, X, Link as LinkIcon, User } from "lucide-react";
+import { Upload, X, Link as LinkIcon, User, Globe } from "lucide-react";
 import profilepic from "../assets/profilepic.jpeg";
 import axios from "axios";
 
@@ -15,6 +15,8 @@ function Profile() {
   const [dragActive, setDragActive] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  const isPro = profile.isPro || user?.isPro || false;
 
   const { register, watch, setValue, getValues } = useForm({
     defaultValues: {
@@ -28,7 +30,8 @@ function Profile() {
       website: profile.website || user?.website || "",
       resume: profile.resume || "",
       bio: profile.bio || user?.bio || "",
-      photo: profile.photo || ""
+      photo: profile.photo || "",
+      customDomain: profile.customDomain || user?.customDomain || ""
     }
   });
 
@@ -168,6 +171,7 @@ function Profile() {
           website: formValues.website,
           resume: formValues.resume,
           photo: formValues.photo,
+          customDomain: formValues.customDomain,
         }),
       });
 
@@ -300,6 +304,36 @@ function Profile() {
                 : "bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-purple-500"
             }`}
           />
+
+          <div className={`col-span-1 md:col-span-2 border rounded-xl p-4 flex items-start gap-3 transition ${
+            isDark
+              ? "bg-slate-950/40 border-slate-800"
+              : "bg-slate-50 border-slate-100"
+          }`}>
+            <Globe className={`w-4 h-4 mt-2.5 shrink-0 ${isDark ? "text-slate-400" : "text-slate-500"}`} />
+            <div className="w-full">
+              <label className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 mb-1.5">
+                <span className={isDark ? "text-slate-300" : "text-slate-600"}>Custom Domain</span>
+                <span className="text-[9px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-md bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900">
+                  Pro
+                </span>
+              </label>
+              <input
+                type="text"
+                placeholder={isPro ? "e.g. johndoe.com" : "Upgrade to Pro to map your own domain"}
+                disabled={!isPro}
+                {...register("customDomain")}
+                className={`border p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isDark
+                    ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-purple-500"
+                    : "bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-purple-500"
+                }`}
+              />
+              <p className="text-[10px] text-slate-400 mt-1.5">
+                Point your domain's CNAME record to this app, then enter it here. No "https://" or "www." needed.
+              </p>
+            </div>
+          </div>
 
           <div className={`col-span-1 md:col-span-2 border rounded-xl p-5 space-y-4 transition ${
             isDark

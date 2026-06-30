@@ -3,6 +3,7 @@ import { usePortfolio } from "../context/PortfolioContext";
 import { ensureAbsoluteUrl } from "../utils/url";
 import { motion } from "framer-motion"; // Adjusted to standard package name
 import ContactForm from "../components/shared/ContactForm";
+import ProBadge from "../components/shared/ProBadge";
 import {
   Globe,
   Mail,
@@ -26,6 +27,7 @@ function CyberpunkTemplate({ portfolio }) {
   const context = usePortfolio();
 
   const profile = portfolio || context.profile;
+  const isPro = portfolio?.isPro ?? context.isPro;
   const projects = portfolio?.projects || context.projects;
   const skills = portfolio?.skills || context.skills;
 
@@ -95,9 +97,13 @@ function CyberpunkTemplate({ portfolio }) {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter text-white leading-none uppercase"
+               className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tighter text-white leading-none uppercase"
               >
-                {profile.fullName || "CYBER_RUNNER"}<br />
+                <span className="flex flex-wrap items-center gap-3">
+                  {profile.fullName || "CYBER_RUNNER"}
+                  <ProBadge isPro={isPro} variant="neon" />
+                </span>
+                <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-400 animate-pulse">
                   {profile.title || "Full Stack Architect"}
                 </span>
@@ -229,11 +235,13 @@ function CyberpunkTemplate({ portfolio }) {
                     {project.screenshot ? (
                       <div className="relative aspect-video overflow-hidden border-b border-cyan-950/80">
                         <div className="absolute inset-0 bg-cyan-950/20 mix-blend-color group-hover:opacity-0 transition duration-300" />
-                        <img
+                      <img
                           src={project.screenshot}
                           alt={project.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 filter saturate-125"
                           referrerPolicy="no-referrer"
+                          loading="lazy"
+                          decoding="async"
                         />
                       </div>
                     ) : (

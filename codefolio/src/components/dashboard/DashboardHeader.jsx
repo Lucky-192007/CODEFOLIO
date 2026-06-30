@@ -1,19 +1,21 @@
 import { usePortfolio } from "../../context/PortfolioContext";
 import { useAuth } from "../../context/AuthContext"; // Importing Auth hook
 import { LogOut } from "lucide-react"; // Optional clean logout icon addition
+import ProBadge from "../shared/ProBadge";
 
 function DashboardHeader() {
-  const { theme } = usePortfolio();
+  const { theme, isPro } = usePortfolio();
   const { user, logout } = useAuth(); // Destructuring user info and logout trigger
 
   return (
     <div className="mt-8 transition-colors duration-300 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <h2 className={`text-2xl font-black tracking-tight ${
+        <h2 className={`text-2xl font-black tracking-tight flex items-center gap-3 ${
           theme === "dark" ? "text-slate-100" : "text-slate-900"
         }`}>
           {/* Changes from 'Dashboard Overview' to 'Welcome, Name' dynamically */}
           {user ? `Welcome, ${user.username || "User"}` : "Welcome back!"}
+          <ProBadge isPro={isPro} variant="default" />
         </h2>
 
         <p className={`text-sm mt-1.5 ${

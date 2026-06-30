@@ -1,37 +1,50 @@
-require('dotenv').config(); // ◄--- CRITICAL: Must be line 1 to load your variables!
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const connectDB = require('./config/db');
+require("dotenv").config();
+
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
+const connectDB = require("./config/db");
+const { stripeWebhook } = require("./controllers/paymentController");
 
 const app = express();
 
-// 1. Establish Database Connection Bridge
 connectDB();
 
-// 2. Global Security & Request Handling Middleware
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://10.211.239.174:5173",
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
         connectSrc: [
-  "'self'",
-  "http://localhost:5173",
-  "http://localhost:5000",
-  "http://10.211.239.174:5173",
-  "http://10.211.239.174:5000",
-],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
+          "'self'",
+          "http://localhost:5173",
+          "http://localhost:5000",
+          "http://127.0.0.1:5173",
+          "http://127.0.0.1:5000",
+          "http://10.211.239.174:5173",
+          "http://10.211.239.174:5000",
+          "ws://localhost:5173",
+          "ws://127.0.0.1:5173",
+          "ws://10.211.239.174:5173",
+        ],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        workerSrc: ["'self'", "blob:"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-imgSrc: [
- "'self'",
- "data:",
- "blob:",
- "https://images.unsplash.com",
- "https://res.cloudinary.com",
- "https://via.placeholder.com"
-],
+        imgSrc: [
+          "'self'",
+          "data:",
+          "blob:",
+          "https://images.unsplash.com",
+          "https://res.cloudinary.com",
+          "https://via.placeholder.com",
+        ],
       },
     },
   })
@@ -39,50 +52,46 @@ imgSrc: [
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://127.0.0.1:5173",
-      "http://10.211.239.174:5173",
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked origin: ${origin}`));
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Stripe-Signature"],
     credentials: true,
   })
 );
+
+app.post(
+  "/api/payments/webhook",
+  express.raw({ type: "application/json" }),
+  stripeWebhook
+);
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// ◄--- Temporary request logger (remove before production)
-app.use((req, res, next) => {
-  if (req.path.includes('skill') || req.path.includes('project')) {
-    console.log(`\n=== 📥 INCOMING REQUEST: ${req.method} ${req.path} ===`);
-    console.log("BODY RECV:", JSON.stringify(req.body, null, 2));
-  }
-  next();
+app.get("/", (req, res) => {
+  res.status(200).send("CodeFolio backend is running.");
 });
 
-app.get('/', (req, res) => {
-  res.status(200).send("🛰️ Backend Security Engine Online and Broadcasting!");
-});
+const authRoutes = require("./routes/authRoutes");
+const uploadRoutes = require("./routes/uploadRoutes");
+const portfolioRoutes = require("./routes/portfolioRoutes");
+const contactRoutes = require("./routes/contactRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 
-// 3. Application Route Mount Points
-const authRoutes      = require('./routes/authRoutes');
-const uploadRoutes    = require('./routes/uploadRoutes');
-const portfolioRoutes = require('./routes/portfolioRoutes');
-const contactRoutes   = require('./routes/contactRoutes');
+app.use("/api/auth", authRoutes);
+app.use("/api/upload", uploadRoutes);
+app.use("/api/portfolio", portfolioRoutes);
+app.use("/api/contact", contactRoutes);
+app.use("/api/payments", paymentRoutes);
 
-app.use('/api/auth',      authRoutes);       // all existing frontend URLs unchanged
-app.use('/api/upload',    uploadRoutes);     // image upload unchanged
-app.use('/api/portfolio', portfolioRoutes);  // ← NEW public portfolio
-app.use('/api/contact',   contactRoutes);    // ← NEW public contact form
-
-// 4. Live Server Listener Process
 const PORT = process.env.PORT || 5000;
-// app.listen(PORT, () => {
-//   console.log(`🛰️ Server broadcasting flawlessly on port ${PORT}`);
-// });
-
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🛰️ Server broadcasting flawlessly on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

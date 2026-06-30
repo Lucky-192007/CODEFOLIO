@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; 
-import AuthPage from "../pages/AuthPage";         
-import LandingPage from "../pages/LandingPage";   // Import your new Vite-themed landing page
+import { useAuth } from "../context/AuthContext";
+import AuthPage from "../pages/AuthPage";
+import LandingPage from "../pages/LandingPage";
 import PortfolioPage from "../pages/PortfolioPage";
 import MyPortfolioPreview from "../pages/MyPortfolioPreview";
 import Dashboard from "../pages/Dashboard";
@@ -10,12 +10,26 @@ import Projects from "../pages/Projects";
 import Skills from "../pages/Skills";
 import Theme from "../pages/Theme";
 import Preview from "../pages/Preview";
+import ResetPasswordPage from "../pages/ResetPasswordPage";
+import BillingSuccess from "../pages/BillingSuccess";
+import BillingCancel from "../pages/BillingCancel";
 import NotFoundPage from "../pages/NotFoundPage";
 
-// A clean component wrapper to isolate protected dashboard pages safely
+const APP_HOSTS = [
+  "localhost",
+  "127.0.0.1",
+  "10.211.239.174",
+  "your-deployed-app.com",
+];
+
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
   return user ? children : <Navigate to="/auth" replace />;
+};
+
+const HomeRoute = () => {
+  const isCustomDomain = !APP_HOSTS.includes(window.location.hostname);
+  return isCustomDomain ? <PortfolioPage /> : <LandingPage />;
 };
 
 function AppRoutes() {
@@ -23,33 +37,79 @@ function AppRoutes() {
 
   return (
     <Routes>
-      {/* Public Landing View */}
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={<HomeRoute />} />
 
-      {/* Auth View: If someone is already logged in, skip the form and route to Dashboard */}
-      <Route 
-        path="/auth" 
-        element={user ? <Navigate to="/dashboard" replace /> : <AuthPage />} 
+      <Route
+        path="/auth"
+        element={user ? <Navigate to="/dashboard" replace /> : <AuthPage />}
       />
-      {/* Common aliases — redirect to the real auth route */}
+
       <Route path="/login" element={<Navigate to="/auth" replace />} />
       <Route path="/signup" element={<Navigate to="/auth" replace />} />
       <Route path="/register" element={<Navigate to="/auth" replace />} />
 
-      {/* Protected Workspace Layout Routes */}
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-      <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
-      <Route path="/skills" element={<ProtectedRoute><Skills /></ProtectedRoute>} />
-      <Route path="/theme" element={<ProtectedRoute><Theme /></ProtectedRoute>} />
-      <Route path="/preview" element={<ProtectedRoute><Preview /></ProtectedRoute>} />
-      {/* Logged-in user's own live preview — reads from PortfolioContext, no username needed */}
-      <Route path="/portfolio" element={<ProtectedRoute><MyPortfolioPreview /></ProtectedRoute>} />
+      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+      <Route path="/billing/success" element={<BillingSuccess />} />
+      <Route path="/billing/cancel" element={<BillingCancel />} />
 
-      {/* Public portfolio by username — fetches from the API */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/projects"
+        element={
+          <ProtectedRoute>
+            <Projects />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/skills"
+        element={
+          <ProtectedRoute>
+            <Skills />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/theme"
+        element={
+          <ProtectedRoute>
+            <Theme />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/preview"
+        element={
+          <ProtectedRoute>
+            <Preview />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/portfolio"
+        element={
+          <ProtectedRoute>
+            <MyPortfolioPreview />
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="/:username" element={<PortfolioPage />} />
-
-      {/* Catch-all fallback — real 404 page instead of a silent redirect */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

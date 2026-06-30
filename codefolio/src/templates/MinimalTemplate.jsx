@@ -4,6 +4,7 @@ import { ensureAbsoluteUrl } from "../utils/url";
 import { motion } from "motion/react";
 import profilepic from "../assets/profilepic.jpeg";
 import ContactForm from "../components/shared/ContactForm";
+import ProBadge from "../components/shared/ProBadge";
 import {
   Globe,
   Mail,
@@ -26,6 +27,7 @@ function MinimalTemplate({ portfolio }) {
   const profile = portfolio || context.profile;
   const projects = portfolio?.projects || context.projects;
   const skills = portfolio?.skills || context.skills;
+  const isPro = portfolio?.isPro ?? context.isPro;
   
   const [copied, setCopied] = useState(false);
 
@@ -96,8 +98,9 @@ function MinimalTemplate({ portfolio }) {
               transition={{ delay: 0.2 }}
               className="space-y-3"
             >
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-normal text-slate-900 tracking-tight leading-[1.1]">
+             <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-normal text-slate-900 tracking-tight leading-[1.1] flex flex-wrap items-center gap-3">
                 Hello, I'm <span className="font-sans font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900">{profile.fullName || "Your Name"}</span>
+                <ProBadge isPro={isPro} variant="default" className="align-middle" />
               </h1>
               <h2 className="text-xl md:text-2xl font-light text-purple-700/90 font-mono tracking-tight">
                 {profile.title || "Full Stack Developer"}
@@ -217,11 +220,13 @@ function MinimalTemplate({ portfolio }) {
                   <div>
                     {project.screenshot ? (
                       <div className="relative aspect-video overflow-hidden border-b border-slate-100/60 bg-slate-100">
-                        <img
+                       <img
                           src={project.screenshot}
                           alt={project.title}
                           className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
                           referrerPolicy="no-referrer"
+                          loading="lazy"
+                          decoding="async"
                         />
                       </div>
                     ) : (

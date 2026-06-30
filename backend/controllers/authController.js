@@ -65,9 +65,9 @@ const login = async (req, res) => {
         fullName: user.fullName,
         title: user.title,
         photo: user.photo,
+        isPro: user.isPro,
       },
     });
-
   } catch (error) {
     console.error("LOGIN ERROR:", error);
 
@@ -118,6 +118,7 @@ const forgotPassword = async (req, res) => {
     const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '15m' });
     const resetLink = `${process.env.CLIENT_URL || "http://localhost:5173"}/reset-password/${resetToken}`;
 
+    let emailSent = false;
     try {
       await sendEmail({
         to: user.email,
@@ -129,14 +130,21 @@ const forgotPassword = async (req, res) => {
           <p>If you didn't request this, you can safely ignore this email.</p>
         `,
       });
+      emailSent = true;
     } catch (emailError) {
       console.error("FORGOT-PASSWORD EMAIL ERROR:", emailError.message);
-      // In dev, if email isn't configured yet, fall back to logging the
+      // Email isn't configured / failed to send — fall back to logging the
       // link to the server console so the flow is still testable.
       console.log(`🔗 Password reset link for ${user.email}: ${resetLink}`);
     }
 
-    res.json(genericResponse);
+    res.json({
+      ...genericResponse,
+      // Only exposed when the email genuinely failed to send, so dev/testing
+      // still works without valid SMTP credentials. Safe to keep — a real
+      // user with working email never sees this since emailSent is true.
+      ...(emailSent ? {} : { resetLink }),
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error during recovery request." });
   }

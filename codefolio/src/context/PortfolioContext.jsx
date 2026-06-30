@@ -98,6 +98,7 @@ export function PortfolioProvider({ children }) {
 
   const views = profile.views || 0;
   const lastViewed = profile.lastViewed || null;
+  const isPro = profile.isPro || false;
 
   useEffect(() => {
     localStorage.setItem("dashboard_theme", theme);
@@ -157,22 +158,29 @@ export function PortfolioProvider({ children }) {
         throw new Error(data.message);
       }
 
-      setProfile({
-        fullName: data.user.fullName,
-        title: data.user.title,
-        experience: data.user.experience,
-        location: data.user.location,
-        bio: data.user.bio,
-        github: data.user.githubUrl,
-        linkedin: data.user.linkedinUrl,
-        website: data.user.websiteUrl,
-        photo: data.user.photo || "",
-        views: data.user.views || 0,
-        lastViewed: data.user.lastViewed || null,
-      });
+     setProfile({
+  fullName: data.user.fullName,
+  title: data.user.title,
+  experience: data.user.experience,
+  location: data.user.location,
+  bio: data.user.bio,
+  email: data.user.email,
+  github: data.user.github,
+  linkedin: data.user.linkedin,
+  website: data.user.website,
+  resume: data.user.resume || "",
+  photo: data.user.photo || "",
+  customDomain: data.user.customDomain || "",
+  views: data.user.views || 0,
+  lastViewed: data.user.lastViewed || null,
+  isPro: data.user.isPro || false,
+});
 
-      setProjects(data.user.projects || []);
-      setSkills(data.user.skills || []);
+setTemplateId(data.user.templateId || "minimal");
+setProjects(data.user.projects || []);
+setSkills(data.user.skills || []);
+
+      
     } catch (err) {
       console.error(err.message);
     }
@@ -207,6 +215,10 @@ export function PortfolioProvider({ children }) {
             github: profile.github,
             linkedin: profile.linkedin,
             website: profile.website,
+            templateId,
+resume: profile.resume,
+photo: profile.photo,
+customDomain: profile.customDomain,
           }),
         }
       );
@@ -243,6 +255,7 @@ export function PortfolioProvider({ children }) {
         setTemplateId,
         views,
         lastViewed,
+        isPro,
         theme,
         setTheme,
         toggleTheme,

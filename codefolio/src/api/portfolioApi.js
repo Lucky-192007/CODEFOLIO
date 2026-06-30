@@ -10,6 +10,14 @@ export const getPublicPortfolio = async (username) => {
   return response.data.user;
 };
 
+// Looks up a portfolio by a mapped custom domain (e.g. visitor lands on
+// johndoe.com, which is CNAME'd to this app). Same response shape as
+// getPublicPortfolio so callers don't need to branch.
+export const getPortfolioByDomain = async (domain) => {
+  const response = await API.get(`/portfolio/domain/${domain}`);
+  return response.data.user;
+};
+
 // Sends a message from a portfolio visitor to the portfolio owner.
 // The owner's real email address is never exposed to the caller — the
 // backend looks it up server-side and forwards the message.
