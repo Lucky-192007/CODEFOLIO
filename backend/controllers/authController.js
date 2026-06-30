@@ -24,28 +24,55 @@ const DEFAULT_PROJECTS = [
   }
 ];
 
+
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  console.log("📥 Login request received");
+  console.log(req.body);
+
   try {
+    // Get credentials from request
+    const { email, password } = req.body;
+
+    // Find user
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "Invalid email or password credentials." });
+
+    if (!user) {
+      return res.status(400).json({
+        message: "Invalid email or password credentials.",
+      });
+    }
+
+    // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid email or password credentials." });
+
+    if (!isMatch) {
+      return res.status(400).json({
+        message: "Invalid email or password credentials.",
+      });
+    }
+
+    // Generate JWT
     const token = generateToken(user._id);
-    // const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-  res.json({
-  token,
-  user: {
-    id: user._id,
-    username: user.username,
-    email: user.email,
-    fullName: user.fullName,
-    title: user.title,
-    photo: user.photo
-  }
-});
+
+    // Send response
+    res.status(200).json({
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        fullName: user.fullName,
+        title: user.title,
+        photo: user.photo,
+      },
+    });
+
   } catch (error) {
-    res.status(500).json({ message: "Server error during login processing." });
+    console.error("LOGIN ERROR:", error);
+
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
@@ -59,9 +86,13 @@ const register = async (req, res) => {
     const token = generateToken(newUser._id);
     // const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
     res.status(201).json({ token, user: { id: newUser._id, username: newUser.username, email: newUser.email } });
-  } catch (error) {
-    res.status(500).json({ message: "Server error during user registration." });
-  }
+  }catch (error) {
+  console.error("REGISTER ERROR:", error);
+
+  res.status(500).json({
+    message: error.message,
+  });
+}
 };
 
 const forgotPassword = async (req, res) => {

@@ -15,7 +15,13 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        connectSrc: ["'self'", "http://localhost:5173", "http://localhost:5000"],
+        connectSrc: [
+  "'self'",
+  "http://localhost:5173",
+  "http://localhost:5000",
+  "http://10.211.239.174:5173",
+  "http://10.211.239.174:5000",
+],
         scriptSrc: ["'self'", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
 imgSrc: [
@@ -36,7 +42,10 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://127.0.0.1:5173",
+      "http://10.211.239.174:5173",
     ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );

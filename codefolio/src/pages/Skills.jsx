@@ -3,9 +3,13 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { usePortfolio } from "../context/PortfolioContext";
 import { useAuth } from "../context/AuthContext";
 
+// API Base URL
+const API = import.meta.env.VITE_API || "http://localhost:5000/api";
+
 function Skills() {
   const { skills, setSkills, theme } = usePortfolio();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+
   const [isSyncing, setIsSyncing] = useState(false);
 
   const [skillData, setSkillData] = useState({
@@ -13,68 +17,70 @@ function Skills() {
     name: "",
   });
 
-  // 1. INITIAL RETRIEVAL LIFECYCLE FROM MONGODB TIER
+  // Load user skills
   useEffect(() => {
     const fetchUserSkills = async () => {
       if (!user?.id) return;
+
       try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`http://localhost:5000/api/auth/profile/${user.id}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const response = await fetch(`${API}/auth/profile/${user.id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
+
         const data = await response.json();
+
         if (response.ok && data.user?.skills) {
           setSkills(data.user.skills);
         }
       } catch (err) {
-        console.error("Error retrieving user tech-stack items:", err);
+        console.error("Error retrieving skills:", err);
       }
     };
 
     fetchUserSkills();
-  }, [user?.id, setSkills]);
+  }, [user?.id, token, setSkills]);
 
-  // 2. LIVE PUSH ADDITION METHOD CONNECTED TO SERVER API
+  // Add Skill
   const addSkill = async () => {
     if (!skillData.name.trim()) return;
+
     if (!user?.id) {
-      alert("Error: Active user session not found.");
+      alert("Please login first.");
       return;
     }
 
     setIsSyncing(true);
 
-    const payload = {
-      userId: user.id,
-      skill: {
-        category: skillData.category,
-        name: skillData.name.trim(),
-      }
-    };
-
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/auth/add-skill", {
+      const response = await fetch(`${API}/auth/add-skill`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          userId: user.id,
+          skill: {
+            category: skillData.category,
+            name: skillData.name.trim(),
+          },
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to commit tech item to database.");
+        throw new Error(data.message || "Failed to add skill.");
       }
 
       setSkills(data.skills || []);
+
       setSkillData({
         category: skillData.category,
         name: "",
       });
-
     } catch (err) {
       alert(err.message);
     } finally {
@@ -82,15 +88,14 @@ function Skills() {
     }
   };
 
-  // 3. DATABASE ACTION METHOD REMOVING SKILL ELEMENTS 
+  // Delete Skill
   const removeSkill = async (indexToRemove, skillId) => {
     if (!user?.id) return;
 
     const targetIdentifier = skillId || indexToRemove;
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/auth/delete-skill", {
+      const response = await fetch(`${API}/auth/delete-skill`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -105,11 +110,10 @@ function Skills() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to scrub item from user record layout.");
+        throw new Error(data.message || "Failed to delete skill.");
       }
 
       setSkills(data.skills || []);
-
     } catch (err) {
       alert(err.message);
     }
@@ -127,10 +131,13 @@ function Skills() {
 
   return (
     <DashboardLayout>
-      <div className={`p-8 rounded-2xl border transition-all duration-300 shadow-sm ${
-        isDark ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-100 text-slate-900"
-      }`}>
-
+      <div
+        className={`p-8 rounded-2xl border transition-all duration-300 shadow-sm ${
+          isDark
+            ? "bg-slate-900 border-slate-800 text-white"
+            : "bg-white border-slate-100 text-slate-900"
+        }`}
+      >
         <h2 className="text-2xl font-black mb-6 tracking-tight">
           Skills Management
         </h2>
@@ -138,9 +145,16 @@ function Skills() {
         <div className="grid md:grid-cols-3 gap-4 mb-8">
           <select
             value={skillData.category}
-            onChange={(e) => setSkillData({ ...skillData, category: e.target.value })}
+            onChange={(e) =>
+              setSkillData({
+                ...skillData,
+                category: e.target.value,
+              })
+            }
             className={`border p-3 rounded-xl transition font-medium focus:ring-2 focus:ring-purple-500 focus:outline-none ${
-              isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-slate-200 text-slate-900"
+              isDark
+                ? "bg-slate-800 border-slate-700 text-white"
+                : "bg-white border-slate-200 text-slate-900"
             }`}
           >
             {categories.map((cat) => (
@@ -153,7 +167,12 @@ function Skills() {
             placeholder="e.g. React"
             disabled={isSyncing}
             value={skillData.name}
-            onChange={(e) => setSkillData({ ...skillData, name: e.target.value })}
+            onChange={(e) =>
+              setSkillData({
+                ...skillData,
+                name: e.target.value,
+              })
+            }
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -161,7 +180,9 @@ function Skills() {
               }
             }}
             className={`border p-3 rounded-xl transition focus:ring-2 focus:ring-purple-500 focus:outline-none ${
-              isDark ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500" : "bg-white border-slate-200 text-slate-900 placeholder-slate-400"
+              isDark
+                ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500"
+                : "bg-white border-slate-200 text-slate-900 placeholder-slate-400"
             }`}
           />
 
@@ -176,24 +197,49 @@ function Skills() {
 
         <div className="space-y-6">
           {categories.map((category) => (
-            <div key={category} className={`pb-6 border-b last:border-0 last:pb-0 ${isDark ? "border-slate-800/65" : "border-slate-100"}`}>
-              <h3 className={`text-base font-bold mb-3 ${isDark ? "text-slate-300" : "text-slate-800"}`}>
+            <div
+              key={category}
+              className={`pb-6 border-b last:border-0 last:pb-0 ${
+                isDark
+                  ? "border-slate-800/65"
+                  : "border-slate-100"
+              }`}
+            >
+              <h3
+                className={`text-base font-bold mb-3 ${
+                  isDark
+                    ? "text-slate-300"
+                    : "text-slate-800"
+                }`}
+              >
                 {category}
               </h3>
 
               <div className="flex flex-wrap gap-3">
                 {(skills || [])
-                  .filter((skill) => skill && skill.category === category)
+                  .filter(
+                    (skill) =>
+                      skill &&
+                      skill.category === category
+                  )
                   .map((skill, index) => (
                     <div
                       key={skill._id || index}
                       className={`px-4 py-2 rounded-xl flex items-center gap-2 border font-medium text-sm transition ${
-                        isDark ? "bg-slate-800 border-slate-700 text-slate-200" : "bg-slate-50 border-slate-100 text-slate-800"
+                        isDark
+                          ? "bg-slate-800 border-slate-700 text-slate-200"
+                          : "bg-slate-50 border-slate-100 text-slate-800"
                       }`}
                     >
                       <span>{skill.name}</span>
+
                       <button
-                        onClick={() => removeSkill((skills || []).indexOf(skill), skill._id)}
+                        onClick={() =>
+                          removeSkill(
+                            (skills || []).indexOf(skill),
+                            skill._id
+                          )
+                        }
                         className="text-red-500 hover:text-red-400 font-extrabold focus:outline-none pl-1 transition-colors"
                       >
                         ×
@@ -201,14 +247,19 @@ function Skills() {
                     </div>
                   ))}
 
-                {(skills || []).filter((s) => s && s.category === category).length === 0 && (
-                  <p className="text-xs text-slate-400 italic">No skills added in this category.</p>
+                {(skills || []).filter(
+                  (s) =>
+                    s &&
+                    s.category === category
+                ).length === 0 && (
+                  <p className="text-xs text-slate-400 italic">
+                    No skills added in this category.
+                  </p>
                 )}
               </div>
             </div>
           ))}
         </div>
-
       </div>
     </DashboardLayout>
   );

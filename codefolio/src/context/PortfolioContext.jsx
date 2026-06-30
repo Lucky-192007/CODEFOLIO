@@ -7,6 +7,8 @@ import {
 import heroPhoto from "../assets/hero.png";
 import { useAuth } from "./AuthContext";
 
+const API = import.meta.env.VITE_API || "http://localhost:5000/api";
+
 const PortfolioContext = createContext();
 
 const initialProfile = {
@@ -26,20 +28,24 @@ const initialProfile = {
 const initialProjects = [
   {
     title: "CodeFolio Builder",
-    description: "An intuitive web application allowing developers to build, customize, and deploy their professional portfolios in seconds.",
+    description:
+      "An intuitive web application allowing developers to build, customize, and deploy their professional portfolios in seconds.",
     techStack: ["React", "Tailwind CSS", "Vite", "LocalStorage"],
     github: "https://github.com",
     live: "https://example.com/live",
-    screenshot: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=500&auto=format&fit=crop"
+    screenshot:
+      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=500&auto=format&fit=crop",
   },
   {
     title: "EcoSphere Mobile App",
-    description: "A crowd-sourced environmental tracker helping local communities map pollution levels and coordinate community cleanups.",
+    description:
+      "A crowd-sourced environmental tracker helping local communities map pollution levels and coordinate community cleanups.",
     techStack: ["React Native", "Express", "MongoDB", "Maps API"],
     github: "https://github.com",
     live: "https://example.com/environmental",
-    screenshot: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=500&auto=format&fit=crop"
-  }
+    screenshot:
+      "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=500&auto=format&fit=crop",
+  },
 ];
 
 const initialSkills = [
@@ -49,7 +55,7 @@ const initialSkills = [
   { category: "Backend", name: "Node.js" },
   { category: "Backend", name: "Express" },
   { category: "Database", name: "PostgreSQL" },
-  { category: "DevOps", name: "Docker" }
+  { category: "DevOps", name: "Docker" },
 ];
 
 export function PortfolioProvider({ children }) {
@@ -90,17 +96,14 @@ export function PortfolioProvider({ children }) {
     setSidebarCollapsed((prev) => !prev);
   };
 
-  // Phase 6.3 — Portfolio Analytics
-  // Real view count + last-viewed timestamp now come from the backend
-  // (incremented server-side whenever someone visits the public /:username
-  // route). These are derived straight from `profile`, which is populated
-  // by loadPortfolio() below.
   const views = profile.views || 0;
   const lastViewed = profile.lastViewed || null;
 
   useEffect(() => {
     localStorage.setItem("dashboard_theme", theme);
+
     const root = window.document.documentElement;
+
     if (theme === "dark") {
       root.classList.add("dark");
     } else {
@@ -109,7 +112,10 @@ export function PortfolioProvider({ children }) {
   }, [theme]);
 
   useEffect(() => {
-    localStorage.setItem("sidebar_collapsed", sidebarCollapsed ? "true" : "false");
+    localStorage.setItem(
+      "sidebar_collapsed",
+      sidebarCollapsed ? "true" : "false"
+    );
   }, [sidebarCollapsed]);
 
   useEffect(() => {
@@ -129,106 +135,101 @@ export function PortfolioProvider({ children }) {
   }, [skills]);
 
   const loadPortfolio = async () => {
-  try {
-    const user = JSON.parse(localStorage.getItem("dashboard_user"));
+    try {
+      const currentUser = JSON.parse(localStorage.getItem("dashboard_user"));
 
-    if (!user) return;
+      if (!currentUser) return;
 
-    const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token");
 
-    const response = await fetch(
-      `http://localhost:5000/api/auth/profile/${user.id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await fetch(
+        `${API}/auth/profile/${currentUser.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message);
       }
-    );
 
-    const data = await response.json();
+      setProfile({
+        fullName: data.user.fullName,
+        title: data.user.title,
+        experience: data.user.experience,
+        location: data.user.location,
+        bio: data.user.bio,
+        github: data.user.githubUrl,
+        linkedin: data.user.linkedinUrl,
+        website: data.user.websiteUrl,
+        photo: data.user.photo || "",
+        views: data.user.views || 0,
+        lastViewed: data.user.lastViewed || null,
+      });
 
-    if (!response.ok) {
-      throw new Error(data.message);
+      setProjects(data.user.projects || []);
+      setSkills(data.user.skills || []);
+    } catch (err) {
+      console.error(err.message);
     }
+  };
 
-    setProfile({
-      fullName: data.user.fullName,
-      title: data.user.title,
-      experience: data.user.experience,
-      location: data.user.location,
-      bio: data.user.bio,
-      github: data.user.githubUrl,
-      linkedin: data.user.linkedinUrl,
-      website: data.user.websiteUrl,
-      photo: data.user.photo || "",
-      // Phase 6.3 — Portfolio Analytics
-      views: data.user.views || 0,
-      lastViewed: data.user.lastViewed || null,
-    });
+  const savePortfolioData = async () => {
+    try {
+      const currentUser = JSON.parse(localStorage.getItem("dashboard_user"));
 
-    setProjects(data.user.projects || []);
-    setSkills(data.user.skills || []);
-  } catch (err) {
-    console.log(err.message);
-  }
-};
-
-const savePortfolioData = async () => {
-  try {
-    const user = JSON.parse(localStorage.getItem("dashboard_user"));
-
-    if (!user) {
-      alert("Please login first.");
-      return;
-    }
-
-    const token = localStorage.getItem("token");
-
-    const response = await fetch(
-      "http://localhost:5000/api/auth/update-profile",
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          fullName: profile.fullName,
-          title: profile.title,
-          experience: profile.experience,
-          location: profile.location,
-          bio: profile.bio,
-          github: profile.github,
-          linkedin: profile.linkedin,
-          website: profile.website,
-        }),
+      if (!currentUser) {
+        alert("Please login first.");
+        return;
       }
-    );
 
-    const data = await response.json();
+      const token = localStorage.getItem("token");
 
-    if (!response.ok) {
-      throw new Error(data.message);
+      const response = await fetch(
+        `${API}/auth/update-profile`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userId: currentUser.id,
+            fullName: profile.fullName,
+            title: profile.title,
+            experience: profile.experience,
+            location: profile.location,
+            bio: profile.bio,
+            github: profile.github,
+            linkedin: profile.linkedin,
+            website: profile.website,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message);
+      }
+
+      console.log("Profile saved successfully");
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
     }
+  };
 
-    console.log("Profile saved successfully");
-  } catch (err) {
-    console.error(err);
-    alert(err.message);
-  }
-};
+  useEffect(() => {
+    if (user?.id) {
+      loadPortfolio();
+    }
+  }, [user?.id]);
 
-useEffect(() => {
-  // Re-fetch fresh profile/analytics data any time the logged-in user
-  // changes — i.e. right after login or register — instead of only once
-  // on initial mount. Previously this only ran on mount, so a freshly
-  // registered/logged-in user's data (including the new analytics
-  // fields) wouldn't show up until a manual page refresh.
-  if (user?.id) {
-    loadPortfolio();
-  }
-}, [user?.id]);
   return (
     <PortfolioContext.Provider
       value={{
@@ -249,7 +250,7 @@ useEffect(() => {
         setSidebarCollapsed,
         toggleSidebar,
         loadPortfolio,
-        savePortfolioData
+        savePortfolioData,
       }}
     >
       {children}
