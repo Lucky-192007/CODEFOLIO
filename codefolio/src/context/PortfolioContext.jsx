@@ -3,9 +3,9 @@ import {
   useContext,
   useState,
   useEffect,
-  useCallback,
 } from "react";
 import heroPhoto from "../assets/hero.png";
+import { useAuth } from "./AuthContext";
 
 const PortfolioContext = createContext();
 
@@ -53,6 +53,8 @@ const initialSkills = [
 ];
 
 export function PortfolioProvider({ children }) {
+  const { user } = useAuth();
+
   const [templateId, setTemplateId] = useState(
     localStorage.getItem("templateId") || "minimal"
   );
@@ -72,14 +74,6 @@ export function PortfolioProvider({ children }) {
     return saved ? JSON.parse(saved) : initialSkills;
   });
 
-  const [views, setViews] = useState(() => {
-    const saved = localStorage.getItem("portfolio_views");
-    if (saved) return parseInt(saved, 10);
-    const initialViews = 1424; 
-    localStorage.setItem("portfolio_views", initialViews.toString());
-    return initialViews;
-  });
-
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem("dashboard_theme") || "light";
   });
@@ -96,13 +90,13 @@ export function PortfolioProvider({ children }) {
     setSidebarCollapsed((prev) => !prev);
   };
 
-  const incrementViews = useCallback(() => {
-    setViews((prev) => {
-      const next = prev + 1;
-      localStorage.setItem("portfolio_views", next.toString());
-      return next;
-    });
-  }, []);
+  // Phase 6.3 — Portfolio Analytics
+  // Real view count + last-viewed timestamp now come from the backend
+  // (incremented server-side whenever someone visits the public /:username
+  // route). These are derived straight from `profile`, which is populated
+  // by loadPortfolio() below.
+  const views = profile.views || 0;
+  const lastViewed = profile.lastViewed || null;
 
   useEffect(() => {
     localStorage.setItem("dashboard_theme", theme);
@@ -135,105 +129,106 @@ export function PortfolioProvider({ children }) {
   }, [skills]);
 
   const loadPortfolio = async () => {
-    try {
-      const user = JSON.parse(localStorage.getItem("dashboard_user"));
-      if (!user) return;
+  try {
+    const user = JSON.parse(localStorage.getItem("dashboard_user"));
 
-      const targetId = user.id || user._id; // ◄--- Safe assignment lookup parameter fallback targeting database configurations
-      const token = localStorage.getItem("token");
+    if (!user) return;
 
-      const response = await fetch(
-        `http://localhost:5000/api/auth/profile/${targetId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+    const token = localStorage.getItem("token");
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message);
+    const response = await fetch(
+      `http://localhost:5000/api/auth/profile/${user.id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
+    );
 
-      // If database contains profile properties, assign them; else fall back to default template definitions
-      if (data.user) {
-        setProfile({
-          fullName: data.user.fullName || initialProfile.fullName,
-          title: data.user.title || initialProfile.title,
-          experience: data.user.experience || initialProfile.experience,
-          location: data.user.location || initialProfile.location,
-          bio: data.user.bio || initialProfile.bio,
-          github: data.user.github || data.user.github || initialProfile.github,
-          linkedin: data.user.linkedin  || data.user.linkedin || initialProfile.linkedin,
-          website: data.user.website || data.user.website || initialProfile.website,
-          photo: data.user.photo || initialProfile.photo,
-        });
+    const data = await response.json();
 
-        // Ensure completely empty project states display initial parameters securely
-        setProjects(data.user.projects && data.user.projects.length > 0 ? data.user.projects : initialProjects);
-        setSkills(data.user.skills && data.user.skills.length > 0 ? data.user.skills : initialSkills);
-      }
-    } catch (err) {
-      console.log("Error running pipeline fallback structure:", err.message);
+    if (!response.ok) {
+      throw new Error(data.message);
     }
-  };
 
-  const savePortfolioData = async () => {
-    try {
-      const user = JSON.parse(localStorage.getItem("dashboard_user"));
+    setProfile({
+      fullName: data.user.fullName,
+      title: data.user.title,
+      experience: data.user.experience,
+      location: data.user.location,
+      bio: data.user.bio,
+      github: data.user.githubUrl,
+      linkedin: data.user.linkedinUrl,
+      website: data.user.websiteUrl,
+      photo: data.user.photo || "",
+      // Phase 6.3 — Portfolio Analytics
+      views: data.user.views || 0,
+      lastViewed: data.user.lastViewed || null,
+    });
 
-      if (!user) {
-        alert("Please login first.");
-        return;
-      }
+    setProjects(data.user.projects || []);
+    setSkills(data.user.skills || []);
+  } catch (err) {
+    console.log(err.message);
+  }
+};
 
-      const targetId = user.id || user._id; // ◄--- Ensure updates use active token ID signatures
-      const token = localStorage.getItem("token");
+const savePortfolioData = async () => {
+  try {
+    const user = JSON.parse(localStorage.getItem("dashboard_user"));
 
-      const response = await fetch(
-        "http://localhost:5000/api/auth/update-profile",
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            userId: targetId,
-            fullName: profile.fullName,
-            title: profile.title,
-            experience: profile.experience,
-            location: profile.location,
-            bio: profile.bio,
-            github: profile.github,
-            linkedin: profile.linkedin,
-            website: profile.website,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message);
-      }
-
-      console.log("Profile saved successfully");
-    } catch (err) {
-      console.error(err);
-      alert(err.message);
+    if (!user) {
+      alert("Please login first.");
+      return;
     }
-  };
 
-  useEffect(() => {
-    const user = localStorage.getItem("dashboard_user");
-    if (user) {
-      loadPortfolio();
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(
+      "http://localhost:5000/api/auth/update-profile",
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          fullName: profile.fullName,
+          title: profile.title,
+          experience: profile.experience,
+          location: profile.location,
+          bio: profile.bio,
+          github: profile.github,
+          linkedin: profile.linkedin,
+          website: profile.website,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message);
     }
-  }, []);
 
+    console.log("Profile saved successfully");
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  }
+};
+
+useEffect(() => {
+  // Re-fetch fresh profile/analytics data any time the logged-in user
+  // changes — i.e. right after login or register — instead of only once
+  // on initial mount. Previously this only ran on mount, so a freshly
+  // registered/logged-in user's data (including the new analytics
+  // fields) wouldn't show up until a manual page refresh.
+  if (user?.id) {
+    loadPortfolio();
+  }
+}, [user?.id]);
   return (
     <PortfolioContext.Provider
       value={{
@@ -246,7 +241,7 @@ export function PortfolioProvider({ children }) {
         templateId,
         setTemplateId,
         views,
-        incrementViews,
+        lastViewed,
         theme,
         setTheme,
         toggleTheme,

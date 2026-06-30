@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { usePortfolio } from "../context/PortfolioContext";
 import MinimalTemplate from "../templates/MinimalTemplate";
 import CyberpunkTemplate from "../templates/CyberpunkTemplate";
@@ -8,12 +7,13 @@ import CorporateTemplate from "../templates/CorporateTemplate";
 // It does NOT call the API by username — it just renders whatever is
 // currently in PortfolioContext (the live editable data), so it always
 // matches what's in the dashboard, even for unsaved changes.
+//
+// Note: this does NOT increment the view counter. Real analytics
+// (Phase 6.3) are tracked server-side only when a visitor hits the
+// public /:username route — viewing your own dashboard/preview should
+// never count as a "visit".
 function MyPortfolioPreview() {
-  const { templateId, incrementViews } = usePortfolio();
-
-  useEffect(() => {
-    incrementViews();
-  }, [incrementViews]);
+  const { templateId } = usePortfolio();
 
   const templateMap = {
     minimal: MinimalTemplate,

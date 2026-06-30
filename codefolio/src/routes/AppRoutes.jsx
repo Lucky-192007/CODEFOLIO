@@ -10,7 +10,7 @@ import Projects from "../pages/Projects";
 import Skills from "../pages/Skills";
 import Theme from "../pages/Theme";
 import Preview from "../pages/Preview";
-import ResetPasswordPage from "../pages/ResetPasswordPage";
+import NotFoundPage from "../pages/NotFoundPage";
 
 // A clean component wrapper to isolate protected dashboard pages safely
 const ProtectedRoute = ({ children }) => {
@@ -31,6 +31,10 @@ function AppRoutes() {
         path="/auth" 
         element={user ? <Navigate to="/dashboard" replace /> : <AuthPage />} 
       />
+      {/* Common aliases — redirect to the real auth route */}
+      <Route path="/login" element={<Navigate to="/auth" replace />} />
+      <Route path="/signup" element={<Navigate to="/auth" replace />} />
+      <Route path="/register" element={<Navigate to="/auth" replace />} />
 
       {/* Protected Workspace Layout Routes */}
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -41,13 +45,12 @@ function AppRoutes() {
       <Route path="/preview" element={<ProtectedRoute><Preview /></ProtectedRoute>} />
       {/* Logged-in user's own live preview — reads from PortfolioContext, no username needed */}
       <Route path="/portfolio" element={<ProtectedRoute><MyPortfolioPreview /></ProtectedRoute>} />
-      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
       {/* Public portfolio by username — fetches from the API */}
       <Route path="/:username" element={<PortfolioPage />} />
 
-      {/* Catch-all fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Catch-all fallback — real 404 page instead of a silent redirect */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

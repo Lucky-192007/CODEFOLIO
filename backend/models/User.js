@@ -46,7 +46,11 @@ const UserSchema = new mongoose.Schema({
   templateId: {type: String,default: "minimal"},
   isPro: { type: Boolean, default: false },
   skills: [SkillSchema],
-  projects: [ProjectSchema]
+  projects: [ProjectSchema],
+
+  // Phase 6.3 — Portfolio Analytics
+  views: { type: Number, default: 0 },
+  lastViewed: { type: Date, default: null }
 }, {
   timestamps: true
 });
