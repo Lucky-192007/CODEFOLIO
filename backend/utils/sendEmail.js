@@ -13,13 +13,22 @@ const transporter = nodemailer.createTransport(
           user: process.env.EMAIL_USER,
           pass: process.env.EMAIL_PASS,
         },
+        // Force IPv4: many cloud hosts (Render, Heroku, etc.) have broken
+        // outbound IPv6 routing, which makes Gmail's SMTP connection hang
+        // until it times out instead of failing fast or connecting.
+        family: 4,
       }
     : {
-        service: process.env.EMAIL_SERVICE || "gmail",
+        // Use Gmail's SMTP host explicitly instead of the "service" shorthand
+        // so we can also force IPv4 below.
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
         auth: {
           user: process.env.EMAIL_USER,
           pass: process.env.EMAIL_PASS,
         },
+        family: 4,
       }
 );
 
