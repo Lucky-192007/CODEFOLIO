@@ -9,6 +9,7 @@ import CorporateTemplate from "../templates/CorporateTemplate";
 import LoadingScreen from "../components/LoadingScreen";
 
 import { getPublicPortfolio, getPortfolioByDomain } from "../api/portfolioApi";
+import { isAppHost } from "../utils/url";
 
 const RESERVED_PATHS = [
   "login",
@@ -24,13 +25,6 @@ const RESERVED_PATHS = [
   "portfolio",
   "reset-password",
   "billing",
-];
-
-const APP_HOSTS = [
-  "localhost",
-  "127.0.0.1",
-  "10.211.239.174",
-  "codefolio-delta-dusky.vercel.app",
 ];
 
 const templateMap = {
@@ -53,15 +47,15 @@ function PortfolioPage() {
       try {
         const hostname = window.location.hostname;
         const normalizedUsername = username?.toLowerCase();
-        const isAppHost = APP_HOSTS.includes(hostname);
+        const isAppHostResult = isAppHost(hostname);
         const isReserved = RESERVED_PATHS.includes(normalizedUsername);
 
-        if (isAppHost && (!normalizedUsername || isReserved)) {
+        if (isAppHostResult && (!normalizedUsername || isReserved)) {
           setPortfolio(null);
           return;
         }
 
-        const data = isAppHost
+        const data = isAppHostResult
           ? await getPublicPortfolio(normalizedUsername)
           : await getPortfolioByDomain(hostname);
 

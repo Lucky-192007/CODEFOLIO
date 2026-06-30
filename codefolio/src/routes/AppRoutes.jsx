@@ -14,14 +14,7 @@ import ResetPasswordPage from "../pages/ResetPasswordPage";
 import BillingSuccess from "../pages/BillingSuccess";
 import BillingCancel from "../pages/BillingCancel";
 import NotFoundPage from "../pages/NotFoundPage";
-
-const APP_HOSTS = [
-  "localhost",
-  "127.0.0.1",
-  "10.211.239.174",
-  "https://codefolio-delta-dusky.vercel.app/auth",
-   
-];
+import { isAppHost } from "../utils/url";
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
@@ -29,7 +22,7 @@ const ProtectedRoute = ({ children }) => {
 };
 
 const HomeRoute = () => {
-  const isCustomDomain = !APP_HOSTS.includes(window.location.hostname);
+  const isCustomDomain = !isAppHost(window.location.hostname);
   return isCustomDomain ? <PortfolioPage /> : <LandingPage />;
 };
 
