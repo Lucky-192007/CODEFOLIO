@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import AuthPage from "../pages/AuthPage";         
 import LandingPage from "../pages/LandingPage";   // Import your new Vite-themed landing page
 import PortfolioPage from "../pages/PortfolioPage";
+import MyPortfolioPreview from "../pages/MyPortfolioPreview";
 import Dashboard from "../pages/Dashboard";
 import Profile from "../pages/Profile";
 import Projects from "../pages/Projects";
@@ -10,7 +11,6 @@ import Skills from "../pages/Skills";
 import Theme from "../pages/Theme";
 import Preview from "../pages/Preview";
 import ResetPasswordPage from "../pages/ResetPasswordPage";
-import PublicPortfolio from "../pages/PublicPortfolio";
 
 // A clean component wrapper to isolate protected dashboard pages safely
 const ProtectedRoute = ({ children }) => {
@@ -39,9 +39,12 @@ function AppRoutes() {
       <Route path="/skills" element={<ProtectedRoute><Skills /></ProtectedRoute>} />
       <Route path="/theme" element={<ProtectedRoute><Theme /></ProtectedRoute>} />
       <Route path="/preview" element={<ProtectedRoute><Preview /></ProtectedRoute>} />
-      <Route path="/portfolio" element={<ProtectedRoute><PortfolioPage /></ProtectedRoute>} />
+      {/* Logged-in user's own live preview — reads from PortfolioContext, no username needed */}
+      <Route path="/portfolio" element={<ProtectedRoute><MyPortfolioPreview /></ProtectedRoute>} />
       <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-      <Route path="/:username" element={<PublicPortfolio />} />
+
+      {/* Public portfolio by username — fetches from the API */}
+      <Route path="/:username" element={<PortfolioPage />} />
 
       {/* Catch-all fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

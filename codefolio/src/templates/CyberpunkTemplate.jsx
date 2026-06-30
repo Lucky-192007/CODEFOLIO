@@ -2,7 +2,6 @@ import { useState } from "react";
 import { usePortfolio } from "../context/PortfolioContext";
 import { ensureAbsoluteUrl } from "../utils/url";
 import { motion } from "framer-motion"; // Adjusted to standard package name
-import profilepic from "../assets/profilepic.jpeg";
 import {
   Globe,
   Mail,
@@ -22,8 +21,13 @@ import {
   Shield     // Added missing icon imports
 } from "lucide-react";
 
-function CyberpunkTemplate() {
-  const { profile, projects, skills } = usePortfolio();
+function CyberpunkTemplate({ portfolio }) {
+  const context = usePortfolio();
+
+  const profile = portfolio || context.profile;
+  const projects = portfolio?.projects || context.projects;
+  const skills = portfolio?.skills || context.skills;
+
   const [copied, setCopied] = useState(false);
 
   // Group skills by category safely
@@ -126,9 +130,9 @@ function CyberpunkTemplate() {
               transition={{ delay: 0.3 }}
               className="flex flex-wrap gap-4 pt-4"
             >
-              {profile.GitHub && (
+              {profile.github && (
                 <a
-                  href={ensureAbsoluteUrl(profile.GitHub)}
+                  href={ensureAbsoluteUrl(profile.github)}
                   target="_blank"
                   rel="noreferrer"
                   className="px-5 py-3 border-2 border-cyan-400 bg-cyan-400/5 hover:bg-cyan-400 hover:text-black font-extrabold tracking-widest uppercase text-xs transition duration-200 flex items-center gap-2 shadow-[0_0_15px_rgba(34,211,238,0.2)]"
@@ -171,7 +175,7 @@ function CyberpunkTemplate() {
               <img
                 src={
                   profile.photo ||
-                  profilepic
+                  "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=400&auto=format&fit=crop"
                 }
                 alt="GRID OPERATIVE"
                 referrerPolicy="no-referrer"
@@ -267,9 +271,9 @@ function CyberpunkTemplate() {
 
                   <div className="px-6 py-4 bg-[#11081d] border-t border-purple-950/50 flex justify-between items-center text-xs">
                     <div className="flex gap-4">
-                      {project.GitHub && (
+                      {project.github && (
                         <a
-                          href={ensureAbsoluteUrl(project.GitHub)}
+                          href={ensureAbsoluteUrl(project.github)}
                           target="_blank"
                           rel="noreferrer"
                           className="text-cyan-400 hover:text-white transition-colors flex items-center gap-1 font-black"
@@ -396,9 +400,9 @@ function CyberpunkTemplate() {
           </div>
 
           <div className="flex justify-center gap-6 pt-4">
-            {profile.GitHub && (
+            {profile.github && (
               <a
-                href={ensureAbsoluteUrl(profile.GitHub)}
+                href={ensureAbsoluteUrl(profile.github)}
                 target="_blank"
                 rel="noreferrer"
                 className="text-xs font-black tracking-widest text-cyan-500 hover:text-white transition uppercase border-b-2 border-cyan-500/30 hover:border-cyan-400 pb-1"
