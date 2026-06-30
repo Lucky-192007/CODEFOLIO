@@ -67,6 +67,11 @@ app.use('/api/portfolio', portfolioRoutes);  // ← NEW public portfolio
 
 // 4. Live Server Listener Process
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+// app.listen(PORT, () => {
+//   console.log(`🛰️ Server broadcasting flawlessly on port ${PORT}`);
+// });
+
+
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`🛰️ Server broadcasting flawlessly on port ${PORT}`);
 });
