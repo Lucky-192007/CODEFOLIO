@@ -69,10 +69,12 @@ app.get('/', (req, res) => {
 const authRoutes      = require('./routes/authRoutes');
 const uploadRoutes    = require('./routes/uploadRoutes');
 const portfolioRoutes = require('./routes/portfolioRoutes');
+const contactRoutes   = require('./routes/contactRoutes');
 
 app.use('/api/auth',      authRoutes);       // all existing frontend URLs unchanged
 app.use('/api/upload',    uploadRoutes);     // image upload unchanged
 app.use('/api/portfolio', portfolioRoutes);  // ← NEW public portfolio
+app.use('/api/contact',   contactRoutes);    // ← NEW public contact form
 
 // 4. Live Server Listener Process
 const PORT = process.env.PORT || 5000;
