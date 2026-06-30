@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { usePortfolio } from "../context/PortfolioContext";
-import PortfolioPage from "./PortfolioPage";
+import MyPortfolioPreview from "./MyPortfolioPreview";
 import {
   Monitor,
   Smartphone,
@@ -196,7 +196,7 @@ function Preview() {
 
               {/* Virtual body containing Portfolio render */}
               <div className={`flex-1 overflow-auto ${isDark ? "bg-slate-950" : "bg-slate-50"}`}>
-                <PortfolioPage />
+                <MyPortfolioPreview />
               </div>
             </div>
           ) : (
@@ -216,7 +216,7 @@ function Preview() {
 
               {/* Screen Content wrapper */}
               <div className="flex-1 bg-white rounded-[2.5rem] overflow-auto h-full w-full">
-                <PortfolioPage />
+                <MyPortfolioPreview />
               </div>
 
               {/* Home Indicator */}
