@@ -36,17 +36,19 @@ function AuthPage() {
     if (!email) return alert("Please enter your registered email address.");
     setLoading(true);
     try {
-      const response = await fetch("https://codefolio-dtdk.onrender.com/api/auth/forgot-password", {
+      const API = import.meta.env.VITE_API || "https://codefolio-dtdk.onrender.com/api";
+      const response = await fetch(`${API}/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
       const data = await response.json();
-      
+
       if (response.ok) {
-        // Since we aren't using email servers right now, dump the reset link to check
-        alert(`Success! Check your terminal console or response log.\n\nTemporary Link Generated:\n${data.resetLink}`);
-        console.log("Password Reset Link:", data.resetLink);
+        // The backend intentionally never reveals whether this email is
+        // registered (that's a deliberate security choice), so this
+        // message is always the same regardless of whether it exists.
+        alert(data.message || "If an account exists for that email, a reset link has been sent.");
         setViewState("login");
       } else {
         alert(data.message || "Failed to process recovery request.");
