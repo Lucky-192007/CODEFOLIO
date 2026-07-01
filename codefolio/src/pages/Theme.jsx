@@ -6,8 +6,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import ProUpgradeButton from "../components/billing/ProUpgradeButton";
 
 function Theme() {
-  const { templateId, setTemplateId, theme } = usePortfolio();
+  const { templateId, setTemplateId, theme, savePortfolioData } = usePortfolio();
   const [unAvailable, setUnAvailable] = useState(null);
+  const [savingId, setSavingId] = useState(null);
 
   const isDark = theme === "dark";
 
@@ -63,13 +64,22 @@ function Theme() {
     },
   ];
 
-  const handleSelectTheme = (themeItem) => {
+  const handleSelectTheme = async (themeItem) => {
     if (themeItem.isLocked) {
       setUnAvailable(themeItem);
       return;
     }
 
     setTemplateId(themeItem.id);
+    setSavingId(themeItem.id);
+    try {
+      // Pass the override directly since the setTemplateId state update
+      // above hasn't landed yet — without this, the request would still
+      // send the *previous* templateId to the backend.
+      await savePortfolioData({ templateId: themeItem.id });
+    } finally {
+      setSavingId(null);
+    }
   };
 
   return (
@@ -170,6 +180,8 @@ function Theme() {
                   <span>
                     {themeItem.isLocked
                       ? "Not Available"
+                      : savingId === themeItem.id
+                      ? "Saving..."
                       : isActive
                       ? "Active Skin"
                       : "Activate Theme"}

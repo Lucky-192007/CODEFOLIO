@@ -186,7 +186,7 @@ setSkills(data.user.skills || []);
     }
   };
 
-  const savePortfolioData = async () => {
+  const savePortfolioData = async (overrides = {}) => {
     try {
       const currentUser = JSON.parse(localStorage.getItem("dashboard_user"));
 
@@ -197,6 +197,26 @@ setSkills(data.user.skills || []);
 
       const token = localStorage.getItem("token");
 
+      const payload = {
+        userId: currentUser.id,
+        fullName: profile.fullName,
+        title: profile.title,
+        experience: profile.experience,
+        location: profile.location,
+        bio: profile.bio,
+        github: profile.github,
+        linkedin: profile.linkedin,
+        website: profile.website,
+        templateId,
+        resume: profile.resume,
+        photo: profile.photo,
+        customDomain: profile.customDomain,
+        // Overrides win over current React state — needed when saving
+        // immediately after a setState call (e.g. picking a theme), since
+        // the state update hasn't landed yet when this runs.
+        ...overrides,
+      };
+
       const response = await fetch(
         `${API}/auth/update-profile`,
         {
@@ -205,21 +225,7 @@ setSkills(data.user.skills || []);
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            userId: currentUser.id,
-            fullName: profile.fullName,
-            title: profile.title,
-            experience: profile.experience,
-            location: profile.location,
-            bio: profile.bio,
-            github: profile.github,
-            linkedin: profile.linkedin,
-            website: profile.website,
-            templateId,
-resume: profile.resume,
-photo: profile.photo,
-customDomain: profile.customDomain,
-          }),
+          body: JSON.stringify(payload),
         }
       );
 

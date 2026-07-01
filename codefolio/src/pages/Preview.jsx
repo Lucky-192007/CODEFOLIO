@@ -14,10 +14,15 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 
 function Preview() {
-  const { templateId, setTemplateId, theme } = usePortfolio();
+  const { templateId, setTemplateId, theme, savePortfolioData } = usePortfolio();
   const { user } = useAuth();
   const [viewport, setViewport] = useState("desktop");
   const [unDeveloped, setUnDeveloped] = useState(null);
+
+  const handleQuickSwitch = (id) => {
+    setTemplateId(id);
+    savePortfolioData({ templateId: id });
+  };
 
   const isDark = theme === "dark";
   const publicPortfolioPath = user?.username ? `/${user.username}` : "/portfolio";
@@ -60,7 +65,7 @@ function Preview() {
                 <button
                   key={id}
                   type="button"
-                  onClick={() => setTemplateId(id)}
+                  onClick={() => handleQuickSwitch(id)}
                   className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-150 capitalize ${
                     templateId === id
                       ? isDark
