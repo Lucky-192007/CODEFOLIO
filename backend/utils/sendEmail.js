@@ -3,6 +3,19 @@ const nodemailer = require("nodemailer");
 // Single shared transporter. Works out of the box with Gmail (using an
 // "App Password", not your normal password) but any SMTP provider works —
 // just set EMAIL_HOST/EMAIL_PORT instead of EMAIL_SERVICE.
+//
+// Explicit short timeouts matter here: without them, nodemailer's SMTP
+// transport defaults (2 min connection, 10 min socket) mean that if a
+// host's network silently drops packets to the SMTP port instead of
+// actively refusing the connection, sendMail() can hang for several
+// minutes before finally failing. These timeouts make that fail fast
+// instead, so a flaky/blocked network shows up in logs in ~10s.
+const TIMEOUT_OPTS = {
+  connectionTimeout: 10_000,
+  greetingTimeout: 10_000,
+  socketTimeout: 10_000,
+};
+
 const transporter = nodemailer.createTransport(
   process.env.EMAIL_HOST
     ? {
@@ -17,6 +30,7 @@ const transporter = nodemailer.createTransport(
         // outbound IPv6 routing, which makes Gmail's SMTP connection hang
         // until it times out instead of failing fast or connecting.
         family: 4,
+        ...TIMEOUT_OPTS,
       }
     : {
         // Use Gmail's SMTP host explicitly instead of the "service" shorthand
@@ -29,6 +43,7 @@ const transporter = nodemailer.createTransport(
           pass: process.env.EMAIL_PASS,
         },
         family: 4,
+        ...TIMEOUT_OPTS,
       }
 );
 

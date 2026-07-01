@@ -118,32 +118,31 @@ const forgotPassword = async (req, res) => {
     const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '15m' });
     const resetLink = `${process.env.CLIENT_URL || "http://localhost:5173"}/reset-password/${resetToken}`;
 
-    let emailSent = false;
-    try {
-      await sendEmail({
-        to: user.email,
-        subject: "Reset your CodeFolio password",
-        html: `
-          <p>Hi ${user.username || ""},</p>
-          <p>We received a request to reset your CodeFolio password. This link expires in 15 minutes.</p>
-          <p><a href="${resetLink}">${resetLink}</a></p>
-          <p>If you didn't request this, you can safely ignore this email.</p>
-        `,
-      });
-      emailSent = true;
-    } catch (emailError) {
-      console.error("FORGOT-PASSWORD EMAIL ERROR:", emailError.message);
-      // Email isn't configured / failed to send — fall back to logging the
-      // link to the server console so the flow is still testable.
-      console.log(`🔗 Password reset link for ${user.email}: ${resetLink}`);
-    }
+    // Respond immediately — never make the user's request wait on an SMTP
+    // round trip. Some networks (Render's outbound routing included) can
+    // silently drop packets to certain SMTP ports instead of refusing the
+    // connection, which makes the OS-level TCP timeout take several
+    // minutes. That's a backend/network concern, not something the person
+    // clicking "forgot password" should ever be stuck waiting on.
+    res.json(genericResponse);
 
-    res.json({
-      ...genericResponse,
-      // Only exposed when the email genuinely failed to send, so dev/testing
-      // still works without valid SMTP credentials. Safe to keep — a real
-      // user with working email never sees this since emailSent is true.
-      ...(emailSent ? {} : { resetLink }),
+    // Always log the link server-side as an immediate fallback/testing aid,
+    // regardless of whether the email ends up sending.
+    console.log(`🔗 Password reset link for ${user.email}: ${resetLink}`);
+
+    // Fire-and-forget the actual email. Errors are caught internally so
+    // this never becomes an unhandled promise rejection.
+    sendEmail({
+      to: user.email,
+      subject: "Reset your CodeFolio password",
+      html: `
+        <p>Hi ${user.username || ""},</p>
+        <p>We received a request to reset your CodeFolio password. This link expires in 15 minutes.</p>
+        <p><a href="${resetLink}">${resetLink}</a></p>
+        <p>If you didn't request this, you can safely ignore this email.</p>
+      `,
+    }).catch((emailError) => {
+      console.error("FORGOT-PASSWORD EMAIL ERROR:", emailError.message);
     });
   } catch (error) {
     res.status(500).json({ message: "Server error during recovery request." });
