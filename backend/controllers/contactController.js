@@ -48,7 +48,12 @@ const sendContactMessage = async (req, res) => {
       return res.status(503).json({ message: "This developer hasn't enabled contact messages yet." });
     }
 
-    await sendEmail({
+    // Respond immediately — the visitor submitting the form shouldn't ever
+    // wait on an email round trip. If the send fails, it's logged
+    // server-side for you to notice, but their submission still succeeds.
+    res.status(200).json({ message: "Message sent successfully!" });
+
+    sendEmail({
       to: owner.email,
       replyTo: email,
       subject: `New portfolio message from ${name} (via CodeFolio)`,
@@ -60,9 +65,9 @@ const sendContactMessage = async (req, res) => {
         <hr/>
         <p style="color:#888;font-size:12px;">Reply directly to this email to respond to ${escapeHtml(name)} — your address was never shown to them.</p>
       `,
+    }).catch((emailError) => {
+      console.error("CONTACT FORM EMAIL ERROR:", emailError.message);
     });
-
-    res.status(200).json({ message: "Message sent successfully!" });
   } catch (error) {
     console.error("CONTACT FORM ERROR:", error.message);
     res.status(500).json({ message: "Could not send your message right now. Please try again later." });

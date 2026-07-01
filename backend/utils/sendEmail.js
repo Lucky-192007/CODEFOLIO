@@ -1,71 +1,55 @@
-const nodemailer = require("nodemailer");
-
-// Single shared transporter. Works out of the box with Gmail (using an
-// "App Password", not your normal password) but any SMTP provider works —
-// just set EMAIL_HOST/EMAIL_PORT instead of EMAIL_SERVICE.
+// Sends email via Brevo's HTTP API instead of raw SMTP.
 //
-// Explicit short timeouts matter here: without them, nodemailer's SMTP
-// transport defaults (2 min connection, 10 min socket) mean that if a
-// host's network silently drops packets to the SMTP port instead of
-// actively refusing the connection, sendMail() can hang for several
-// minutes before finally failing. These timeouts make that fail fast
-// instead, so a flaky/blocked network shows up in logs in ~10s.
-const TIMEOUT_OPTS = {
-  connectionTimeout: 10_000,
-  greetingTimeout: 10_000,
-  socketTimeout: 10_000,
-};
-
-const transporter = nodemailer.createTransport(
-  process.env.EMAIL_HOST
-    ? {
-        host: process.env.EMAIL_HOST,
-        port: Number(process.env.EMAIL_PORT) || 587,
-        secure: Number(process.env.EMAIL_PORT) === 465,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-        // Force IPv4: many cloud hosts (Render, Heroku, etc.) have broken
-        // outbound IPv6 routing, which makes Gmail's SMTP connection hang
-        // until it times out instead of failing fast or connecting.
-        family: 4,
-        ...TIMEOUT_OPTS,
-      }
-    : {
-        // Use Gmail's SMTP host explicitly instead of the "service" shorthand
-        // so we can also force IPv4 below.
-        host: "smtp.gmail.com",
-        port: 465,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-        family: 4,
-        ...TIMEOUT_OPTS,
-      }
-);
+// Why: SMTP (ports 465/587) appears to be silently blocked/dropped on
+// Render's outbound network — connections don't get actively refused,
+// they just hang until the OS's own TCP timeout kicks in (several
+// minutes), which made both password-reset and contact-form emails
+// unreliable. An HTTPS API call on port 443 doesn't hit that problem —
+// it's the same kind of request your frontend already makes to your own
+// backend, so it works from anywhere a normal API call works.
+//
+// Setup: sign up free at brevo.com, verify a sender email (no domain
+// required — just a 6-digit code sent to that inbox), then set these in
+// your environment:
+//   BREVO_API_KEY = the API key from Settings > SMTP & API > API Keys
+//   EMAIL_FROM    = the verified sender address, e.g. "you@gmail.com"
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const EMAIL_FROM = process.env.EMAIL_FROM || process.env.EMAIL_USER;
+const EMAIL_FROM_NAME = process.env.EMAIL_FROM_NAME || "CodeFolio";
 
 /**
- * Sends an email. Throws if EMAIL_USER/EMAIL_PASS aren't configured so
- * callers can decide how to surface that (e.g. still succeed the request
- * but log a warning, vs. fail outright).
+ * Sends an email. Throws if BREVO_API_KEY/EMAIL_FROM aren't configured, or
+ * if Brevo's API rejects the request, so callers can decide how to surface
+ * that (e.g. still succeed the request but log a warning, vs. fail
+ * outright).
  */
 const sendEmail = async ({ to, subject, html, replyTo }) => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+  if (!BREVO_API_KEY || !EMAIL_FROM) {
     throw new Error(
-      "Email service is not configured. Set EMAIL_USER and EMAIL_PASS (and optionally EMAIL_HOST/EMAIL_PORT or EMAIL_SERVICE) in your .env file."
+      "Email service is not configured. Set BREVO_API_KEY and EMAIL_FROM in your environment variables."
     );
   }
 
-  await transporter.sendMail({
-    from: `"CodeFolio" <${process.env.EMAIL_USER}>`,
-    to,
-    subject,
-    html,
-    ...(replyTo ? { replyTo } : {}),
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "api-key": BREVO_API_KEY,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      sender: { email: EMAIL_FROM, name: EMAIL_FROM_NAME },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+      ...(replyTo ? { replyTo: { email: replyTo } } : {}),
+    }),
   });
+
+  if (!response.ok) {
+    const errorBody = await response.text().catch(() => "");
+    throw new Error(`Brevo API error (${response.status}): ${errorBody}`);
+  }
 };
 
 module.exports = sendEmail;
